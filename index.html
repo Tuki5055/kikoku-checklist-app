@@ -3,22 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>帰国後やること管理</title>
+  <title>日本生活 再起動クエスト</title>
   <style>
     :root {
-      --bg: #f7f8fb;
+      --bg: #f5f8f6;
       --panel: #ffffff;
       --text: #1b2430;
       --muted: #667085;
-      --line: #d9e0ea;
-      --brand: #126a72;
-      --brand-2: #0e5b90;
+      --line: #dce6df;
+      --brand: #2f7d68;
+      --brand-2: #5c6f3f;
       --ok: #198754;
       --warn: #c77600;
       --danger: #c43d4b;
       --s: #b42318;
-      --shadow: 0 8px 24px rgba(27, 36, 48, .08);
-      --radius: 8px;
+      --shadow: 0 10px 28px rgba(47, 80, 68, .10);
+      --radius: 14px;
     }
     * { box-sizing: border-box; }
     body {
@@ -31,7 +31,7 @@
     button, input, select, textarea { font: inherit; }
     button {
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       background: #fff;
       color: var(--text);
       min-height: 40px;
@@ -44,7 +44,7 @@
     input, select, textarea {
       width: 100%;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       background: #fff;
       color: var(--text);
       padding: 9px 10px;
@@ -54,16 +54,17 @@
       position: sticky;
       top: 0;
       z-index: 5;
-      background: rgba(255,255,255,.96);
+      background: rgba(255,255,255,.94);
       border-bottom: 1px solid var(--line);
       backdrop-filter: blur(10px);
     }
     .header-inner, main { max-width: 1180px; margin: 0 auto; padding: 16px; }
     .title-row { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-    h1 { margin: 0; font-size: clamp(24px, 4vw, 36px); letter-spacing: 0; }
+    h1 { margin: 0; font-size: clamp(25px, 4vw, 38px); letter-spacing: 0; }
     h2 { margin: 0 0 12px; font-size: 20px; letter-spacing: 0; }
     h3 { margin: 0 0 8px; font-size: 17px; letter-spacing: 0; }
-    .return-date { color: var(--muted); font-weight: 700; }
+    .subtitle { margin-top: 4px; color: #435366; font-weight: 700; max-width: 680px; }
+    .return-date { margin-top: 6px; color: var(--muted); font-weight: 700; }
     .header-save-line { margin-top: 5px; }
     .header-save-line .chip { font-size: 11px; padding: 2px 7px; }
     .progress-wrap { margin-top: 12px; }
@@ -82,17 +83,17 @@
       box-shadow: var(--shadow);
     }
     .stat { padding: 7px 8px; box-shadow: none; }
-    .stat strong { display: block; font-size: 18px; line-height: 1.1; }
+    .stat strong { display: block; font-size: 18px; line-height: 1.15; overflow-wrap: anywhere; }
     .stat span { color: var(--muted); font-size: 11px; line-height: 1.2; }
-    main { display: grid; gap: 16px; }
-    section { padding: 16px; }
+    main { display: grid; gap: 18px; }
+    section { padding: 18px; }
     .dash-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .dash-card {
       border-left: 4px solid var(--brand);
-      padding: 8px 10px;
-      background: #fbfcfd;
-      border-radius: 8px;
-      min-height: 64px;
+      padding: 10px 12px;
+      background: #fbfcf7;
+      border-radius: 12px;
+      min-height: 66px;
     }
     .dash-card strong { display: block; font-size: 20px; line-height: 1.15; }
     .dash-card span { color: var(--muted); font-size: 12px; }
@@ -105,7 +106,7 @@
     label { display: grid; gap: 4px; font-size: 13px; font-weight: 700; color: #344054; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
     .task-list { display: grid; gap: 10px; }
-    .task-card { padding: 12px; box-shadow: none; }
+    .task-card { padding: 14px; box-shadow: none; }
     .task-card.done { opacity: .58; }
     .task-top {
       display: grid;
@@ -160,7 +161,7 @@
     .empty { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 8px; }
 
     .section-help { margin: -4px 0 12px; color: var(--muted); font-size: 14px; }
-    .quick-check-section { border-top: 5px solid var(--brand); }
+    .quick-check-section { border-top: 5px solid var(--brand); background: linear-gradient(180deg, #ffffff 0%, #fbfcf7 100%); }
     .quick-progress-line {
       display: flex;
       align-items: center;
@@ -181,16 +182,16 @@
       grid-template-columns: 34px minmax(0, 1fr) auto auto;
       gap: 10px;
       align-items: center;
-      min-height: 52px;
-      padding: 9px 0;
+      min-height: 56px;
+      padding: 10px 0;
       border-bottom: 1px solid var(--line);
     }
     .quick-check-item input[type="checkbox"] { width: 24px; height: 24px; accent-color: var(--brand); }
     .quick-check-main { min-width: 0; font-weight: 800; overflow-wrap: anywhere; }
     .quick-check-main.s { color: var(--s); }
     .quick-check-meta { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; min-width: 150px; }
-    .quick-check-complete { min-width: 56px; color: var(--ok); font-weight: 900; text-align: right; }
-    .quick-check-item.done { opacity: .56; }
+    .quick-check-complete { min-width: 64px; color: var(--ok); font-weight: 900; text-align: right; }
+    .quick-check-item.done { opacity: .58; }
     .quick-check-item.done .quick-check-main { text-decoration: line-through; }
     .quick-today.active { background: #e0f2fe; border-color: #7dd3fc; color: #075985; }
 
@@ -211,7 +212,7 @@
     .share-box strong { display: block; margin-bottom: 4px; }
     .share-current { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
     .sync-status { border-radius: 8px; padding: 9px 10px; background: #eef4f7; color: #344054; font-weight: 800; }
-    .compact-dashboard { padding: 12px; }
+    .compact-dashboard { padding: 14px; }
     .compact-dashboard h2 { font-size: 17px; margin-bottom: 8px; }
     .inline-details { margin-top: 8px; }
     .inline-details summary { color: var(--brand-2); font-size: 13px; }
@@ -281,7 +282,8 @@
     <div class="header-inner">
       <div class="title-row">
         <div>
-          <h1>帰国後やること管理</h1>
+          <h1>日本生活 再起動クエスト</h1>
+          <div class="subtitle">帰国後の手続き・生活準備を、ひとつずつクリアしていくためのチェックリスト</div>
           <div class="return-date">帰国予定：2026年6月</div>
           <div class="header-save-line"><span class="chip" id="shareModeChip">保存：この端末のみ</span></div>
         </div>
@@ -295,13 +297,13 @@
 
   <main>
     <section class="quick-check-section">
-      <h2>まず終わらせるチェックリスト</h2>
-      <p class="section-help">帰国直後に詰まりやすい項目です。2人で確認しながら、終わったものにチェックしてください。</p>
+      <h2>今日のミッション</h2>
+      <p class="section-help">まずはここだけ進めればOK。重要な手続きから順番に片付けます。</p>
       <div class="quick-progress-line" id="quickProgressText"></div>
-      <div class="bar quick-progress-bar" aria-label="重要チェックリスト進捗"><span id="quickProgressBar"></span></div>
+      <div class="bar quick-progress-bar" aria-label="今日のミッション進捗"><span id="quickProgressBar"></span></div>
       <div class="quick-filter-bar" id="quickFilterButtons">
-        <button type="button" data-mode="open" onclick="setQuickFilter('open')">未完了だけ</button>
-        <button type="button" data-mode="today" onclick="setQuickFilter('today')">今日やる</button>
+        <button type="button" data-mode="open" onclick="setQuickFilter('open')">未クリアだけ</button>
+        <button type="button" data-mode="today" onclick="setQuickFilter('today')">今日のミッション</button>
         <button type="button" data-mode="city" onclick="setQuickFilter('city')">市役所</button>
         <button type="button" data-mode="phone" onclick="setQuickFilter('phone')">電話必要</button>
         <button type="button" data-mode="all" onclick="setQuickFilter('all')">全部</button>
@@ -310,14 +312,14 @@
     </section>
 
     <section class="compact-dashboard">
-      <h2>ダッシュボード</h2>
+      <h2>進捗マップ</h2>
       <div class="dash-grid" id="dashboard"></div>
       <details class="inline-details">
         <summary>細かい集計を見る</summary>
         <div class="summary-grid">
           <div class="mini-card"><h3>期限別集計</h3><div id="timingSummary"></div></div>
           <div class="mini-card"><h3>分野別集計</h3><div id="categorySummary"></div></div>
-          <div class="mini-card"><h3>Sランク未完了</h3><ul id="sOpenList"></ul></div>
+          <div class="mini-card"><h3>最重要 未クリア</h3><ul id="sOpenList"></ul></div>
         </div>
       </details>
     </section>
@@ -339,7 +341,7 @@
     </details>
 
     <section class="edit-area hidden" id="taskFormSection">
-      <h2 id="formTitle">タスク追加</h2>
+      <h2 id="formTitle">ミッション追加</h2>
       <form id="taskForm" class="form-grid">
         <input type="hidden" id="editId">
         <label>タスク名<input id="taskTitle" required></label>
@@ -371,7 +373,7 @@
       <summary><h2>市役所系まとめ</h2></summary>
       <div class="panel-body">
         <div class="summary-grid">
-          <div class="mini-card"><h3>市役所系の未完了</h3><ul id="cityTasks"></ul></div>
+          <div class="mini-card"><h3>市役所系の未クリア</h3><ul id="cityTasks"></ul></div>
           <div class="mini-card"><h3>市役所に行くときの持ち物</h3><ul id="cityDocuments"></ul></div>
           <div class="mini-card"><h3>専用チェック項目</h3><ul id="cityChecklist"></ul></div>
         </div>
@@ -393,14 +395,14 @@
     </details>
 
     <details class="utility-panel" id="adminMenu">
-      <summary><h2>管理メニュー</h2></summary>
+      <summary><h2>設定・バックアップ</h2></summary>
       <div class="panel-body">
-        <p class="section-help">通常の利用では開く必要はありません。バックアップ、共有設定、初期化などの管理操作を行う場所です。</p>
+        <p class="section-help">共有・バックアップ・復元など、普段は触らない設定です。</p>
         <div class="toolbar">
-          <button onclick="showTaskForm()">タスク追加</button>
-          <button onclick="exportJson()">共有データを書き出す</button>
-          <label class="file-input">共有データを読み込む<input id="importFile" type="file" accept="application/json"></label>
-          <button onclick="restoreInitial()">初期データ復元</button>
+          <button onclick="showTaskForm()">タスクを追加</button>
+          <button onclick="exportJson()">バックアップを書き出す</button>
+          <label class="file-input">バックアップを読み込む<input id="importFile" type="file" accept="application/json"></label>
+          <button onclick="restoreInitial()">初期データに戻す</button>
         </div>
         <div class="toolbar">
           <button type="button" onclick="setShareMode('local')">ローカル保存</button>
@@ -463,6 +465,33 @@
     const keyword = (text, words) => words.some(word => text.includes(word));
     const splitList = value => String(value || "").split(",").map(v => v.trim()).filter(Boolean);
     const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const displayStatus = status => ({ "未完了": "未クリア", "完了": "クリア", "要確認": "要チェック" }[status] || status);
+    const displayPriority = priority => priority === "S" ? "最重要" : priority;
+    const categoryIcon = category => ({
+      "住所・市役所": "🏛️",
+      "マイナンバー": "🏛️",
+      "健康保険": "🛡️",
+      "年金": "🛡️",
+      "銀行": "💳",
+      "証券": "💳",
+      "保険": "🛡️",
+      "税金": "🧾",
+      "携帯・通信": "📱",
+      "住居": "🏠",
+      "車": "🚗",
+      "子育て": "🍼",
+      "資格・学習": "📚",
+      "生活用品": "🛒"
+    }[category] || "");
+    const displayCategory = category => [categoryIcon(category), category].filter(Boolean).join(" ");
+    function restartLevelLabel(pct) {
+      if (pct >= 100) return "再起動完了";
+      if (pct >= 81) return "ほぼ日本生活モード";
+      if (pct >= 61) return "かなり整ってきた";
+      if (pct >= 41) return "生活基盤セットアップ中";
+      if (pct >= 21) return "住所・通信まわり整備中";
+      return "日本生活 起動準備中";
+    }
 
     function categoryFor(title) {
       if (keyword(title, ["転入", "住民票", "世帯", "印鑑", "戸籍", "課税証明", "納税証明", "ごみ", "ハザード", "避難所", "自治会"])) return "住所・市役所";
@@ -641,19 +670,19 @@
       }
     }
 
-    function fillSelect(id, values, allLabel) {
+    function fillSelect(id, values, allLabel, formatter = value => value) {
       const el = document.getElementById(id);
-      el.innerHTML = (allLabel ? `<option value="">${allLabel}</option>` : "") + values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+      el.innerHTML = (allLabel ? `<option value="">${allLabel}</option>` : "") + values.map(v => `<option value="${esc(v)}">${esc(formatter(v))}</option>`).join("");
     }
     function initControls() {
       fillSelect("filterTiming", TIMINGS, "すべて");
-      fillSelect("filterCategory", CATEGORIES, "すべて");
-      fillSelect("filterPriority", PRIORITIES, "すべて");
-      fillSelect("filterStatus", ["未完了", "完了", "要確認"], "すべて");
-      fillSelect("taskCategory", CATEGORIES);
+      fillSelect("filterCategory", CATEGORIES, "すべて", displayCategory);
+      fillSelect("filterPriority", PRIORITIES, "すべて", displayPriority);
+      fillSelect("filterStatus", ["未完了", "完了", "要確認"], "すべて", displayStatus);
+      fillSelect("taskCategory", CATEGORIES, null, displayCategory);
       fillSelect("taskTiming", TIMINGS);
-      fillSelect("taskPriority", PRIORITIES);
-      fillSelect("taskStatus", STATUSES);
+      fillSelect("taskPriority", PRIORITIES, null, displayPriority);
+      fillSelect("taskStatus", STATUSES, null, displayStatus);
       ["filterTiming", "filterCategory", "filterPriority", "filterStatus", "searchText"].forEach(id => document.getElementById(id).addEventListener("input", render));
       document.getElementById("importFile").addEventListener("change", importJson);
       document.getElementById("taskForm").addEventListener("submit", saveTaskFromForm);
@@ -1078,7 +1107,7 @@
       const pct = total ? Math.round(done / total * 100) : 0;
       document.getElementById("progressBar").style.width = pct + "%";
       document.getElementById("headerStats").innerHTML = [
-        ["全体進捗", pct + "%"], ["完了数 / 全タスク数", `${done} / ${total}`], ["未完了数", open], ["Sランク未完了数", sOpen], ["要確認数", confirm], ["今日やる", state.tasks.filter(t => t.today && t.status !== "完了").length]
+        ["再起動レベル", restartLevelLabel(pct)], ["全体進捗", pct + "%"], ["クリア数 / 全ミッション", `${done} / ${total}`], ["未クリア数", open], ["最重要 未クリア", sOpen], ["今日のミッション", state.tasks.filter(t => t.today && t.status !== "完了").length]
       ].map(([label, value]) => `<div class="stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join("");
     }
 
@@ -1092,12 +1121,12 @@
       const done = tasks.filter(t => t.status === "完了").length;
       const open = total - done;
       const pct = total ? Math.round(done / total * 100) : 0;
-      document.getElementById("quickProgressText").innerHTML = `<strong>重要チェックリスト進捗：${done} / ${total} 完了、未完了 ${open}、完了率 ${pct}%</strong><span>${quickFilterLabel()}</span>`;
+      document.getElementById("quickProgressText").innerHTML = `<strong>今日のミッション進捗：${done} / ${total} クリア、未クリア ${open}、クリア率 ${pct}%</strong><span>日本生活 再起動レベル：${esc(restartLevelLabel(pct))} / ${esc(quickFilterLabel())}</span>`;
       document.getElementById("quickProgressBar").style.width = pct + "%";
     }
 
     function quickFilterLabel() {
-      return { all: "全部表示", open: "未完了だけ", today: "今日やる", city: "市役所", phone: "電話必要" }[quickFilterMode] || "全部表示";
+      return { all: "全部表示", open: "未クリアだけ", today: "今日のミッション", city: "市役所", phone: "電話必要" }[quickFilterMode] || "全部表示";
     }
 
     function renderQuickChecklist() {
@@ -1115,24 +1144,26 @@
       document.getElementById("quickChecklist").innerHTML = shownTasks.map(task => {
         const done = task.status === "完了";
         return `<label class="quick-check-item ${done ? "done" : ""}">
-          <input type="checkbox" ${done ? "checked" : ""} onchange="toggleQuickDone('${task.id}')" aria-label="${esc(task.title)}を完了">
+          <input type="checkbox" ${done ? "checked" : ""} onchange="toggleQuickDone('${task.id}')" aria-label="${esc(task.title)}をクリア">
           <span class="quick-check-main ${task.priority === "S" ? "s" : ""}">${esc(task.title)}</span>
           <span class="quick-check-meta">
             <span class="chip">${esc(task.timing)}</span>
-            <span class="chip ${task.priority === "S" ? "s" : ""}">優先度 ${esc(task.priority)}</span>
-            <button class="small quick-today ${task.today ? "active" : ""}" type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleQuickToday('${task.id}')">今日</button>
+            <span class="chip ${task.priority === "S" ? "s" : ""}">${esc(displayPriority(task.priority))}</span>
+            <button class="small quick-today ${task.today ? "active" : ""}" type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleQuickToday('${task.id}')">今日のミッション</button>
           </span>
-          <span class="quick-check-complete">${done ? "✓ 完了" : ""}</span>
+          <span class="quick-check-complete">${done ? "✓ クリア" : ""}</span>
         </label>`;
-      }).join("") || `<div class="empty">該当する重要チェック項目はありません。</div>`;
+      }).join("") || `<div class="empty">該当するミッションはありません。</div>`;
     }
 
     function toggleQuickDone(taskId) {
       const task = findTask(taskId);
       if (!task) return;
-      task.status = task.status === "完了" ? "未完了" : "完了";
+      const willClear = task.status !== "完了";
+      task.status = willClear ? "完了" : "未完了";
       save({ sync: true });
       render();
+      if (willClear) showToast("1ミッションクリア。生活基盤が一歩整いました", "ok");
     }
 
     function toggleQuickToday(taskId) {
@@ -1152,13 +1183,13 @@
       const open = state.tasks.filter(t => t.status !== "完了");
       const count = pred => open.filter(pred).length;
       const cards = [
-        ["全体進捗", Math.round((state.tasks.length - open.length) / Math.max(1, state.tasks.length) * 100) + "%", "完了率"],
-        ["今日やるべきこと", count(t => t.today), "今日フラグあり"],
-        ["14日以内にやること", count(t => ["帰国当日〜3日以内", "14日以内", "1〜2週間以内"].includes(t.timing)), "初動タスク"],
+        ["日本生活 再起動レベル", restartLevelLabel(Math.round((state.tasks.length - open.length) / Math.max(1, state.tasks.length) * 100)), "全体の状態"],
+        ["全体進捗", Math.round((state.tasks.length - open.length) / Math.max(1, state.tasks.length) * 100) + "%", "クリア率"],
+        ["今日のミッション", count(t => t.today), "今日進める"],
+        ["14日以内の初動", count(t => ["帰国当日〜3日以内", "14日以内", "1〜2週間以内"].includes(t.timing)), "早めに整える"],
         ["電話が必要な手続き", count(t => t.phoneRequired), "発信・問い合わせ"],
-        ["市役所系の未完了", count(t => t.category === "住所・市役所" || CITY_ITEMS.some(i => t.title.includes(i.replace("住所変更", "")))), "窓口中心"],
-        ["証券・保険の未完了", count(t => ["証券", "保険"].includes(t.category)), "資産・保障"],
-        ["子育て・将来設計の未完了", count(t => ["子育て", "資格・学習"].includes(t.category) || t.title.includes("将来")), "家族と学習"],
+        ["市役所系 未クリア", count(t => t.category === "住所・市役所" || CITY_ITEMS.some(i => t.title.includes(i.replace("住所変更", "")))), "窓口中心"],
+        ["証券・保険 未クリア", count(t => ["証券", "保険"].includes(t.category)), "資産・保障"],
         ["あとで確認", count(t => t.later), "保留中"]
       ];
       document.getElementById("dashboard").innerHTML = cards.map(c => `<div class="dash-card"><span>${esc(c[0])}</span><strong>${esc(c[1])}</strong><span>${esc(c[2])}</span></div>`).join("");
@@ -1171,7 +1202,8 @@
       const html = keys.map(key => {
         const total = state.tasks.filter(t => getter(t) === key).length;
         const done = state.tasks.filter(t => getter(t) === key && t.status === "完了").length;
-        return `<div>${esc(key)}：${done}/${total}</div>`;
+        const label = id === "categorySummary" ? displayCategory(key) : key;
+        return `<div>${esc(label)}：${done}/${total}</div>`;
       }).join("");
       document.getElementById(id).innerHTML = html;
     }
@@ -1185,26 +1217,26 @@
     function taskCard(t) {
       const done = t.status === "完了";
       const chips = [
-        `<span class="chip">${esc(t.category)}</span>`,
+        `<span class="chip">${esc(displayCategory(t.category))}</span>`,
         `<span class="chip">${esc(t.timing)}</span>`,
-        `<span class="chip ${t.priority === "S" ? "s" : ""}">優先度 ${esc(t.priority)}</span>`,
-        `<span class="chip ${t.status === "要確認" ? "check" : done ? "ok" : ""}">${esc(t.status)}</span>`,
+        `<span class="chip ${t.priority === "S" ? "s" : ""}">${esc(displayPriority(t.priority))}</span>`,
+        `<span class="chip ${t.status === "要確認" ? "check" : done ? "ok" : ""}">${esc(displayStatus(t.status))}</span>`,
         t.phoneRequired ? `<span class="chip phone">電話必要</span>` : "",
         (t.caution.includes("0570") || t.title.includes("0570")) ? `<span class="chip warn">0570注意</span>` : "",
-        t.today ? `<span class="chip ok">今日やる</span>` : "",
+        t.today ? `<span class="chip ok">今日のミッション</span>` : "",
         t.later ? `<span class="chip check">あとで確認</span>` : ""
       ].join("");
       return `<article class="task-card ${done ? "done" : ""}">
         <div class="task-top">
-          <input type="checkbox" ${done ? "checked" : ""} onchange="toggleDone('${t.id}')" aria-label="完了">
+          <input type="checkbox" ${done ? "checked" : ""} onchange="toggleDone('${t.id}')" aria-label="クリア">
           <div>
             <div class="task-title ${t.priority === "S" ? "s" : ""}">${esc(t.title)}</div>
             <div class="chips">${chips}</div>
           </div>
           <div class="actions">
-            <button class="small" onclick="markConfirm('${t.id}')">要確認</button>
-            <button class="small" onclick="toggleToday('${t.id}')">今日</button>
-            <button class="small" onclick="toggleLater('${t.id}')">後で</button>
+            <button class="small" onclick="markConfirm('${t.id}')">要チェック</button>
+            <button class="small" onclick="toggleToday('${t.id}')">今日のミッション</button>
+            <button class="small" onclick="toggleLater('${t.id}')">あとで確認</button>
             <button class="small" onclick="editTask('${t.id}')">編集</button>
             <button class="small danger" onclick="deleteTask('${t.id}')">削除</button>
           </div>
@@ -1224,9 +1256,11 @@
     function findTask(id) { return state.tasks.find(t => t.id === id); }
     function toggleDone(id) {
       const task = findTask(id);
-      task.status = task.status === "完了" ? "未完了" : "完了";
+      const willClear = task.status !== "完了";
+      task.status = willClear ? "完了" : "未完了";
       save({ sync: true });
       render();
+      if (willClear) showToast("クリアしました。次の手続きへ進めます", "ok");
     }
     function markConfirm(id) { findTask(id).status = "要確認"; save({ sync: true }); render(); }
     function toggleToday(id) { const t = findTask(id); t.today = !t.today; save({ sync: true }); render(); }
@@ -1241,7 +1275,7 @@
 
     function showTaskForm(task) {
       document.getElementById("taskFormSection").classList.remove("hidden");
-      document.getElementById("formTitle").textContent = task ? "タスク編集" : "タスク追加";
+      document.getElementById("formTitle").textContent = task ? "ミッション編集" : "ミッション追加";
       document.getElementById("editId").value = task?.id || "";
       document.getElementById("taskTitle").value = task?.title || "";
       document.getElementById("taskCategory").value = task?.category || "住所・市役所";
@@ -1300,7 +1334,7 @@
       document.getElementById("contacts").innerHTML = state.contacts.map(c => `<div class="contact-row">
         <div class="contact-head"><span>${esc(c.name)}</span><span class="chip ${c.need === "高" ? "phone" : ""}">電話必要度：${esc(c.need)}</span></div>
         <div class="chips">${c.naviWarning ? '<span class="chip warn">0570注意</span>' : ""}${c.tollFreeWarning ? '<span class="chip warn">0120・0800注意</span>' : ""}</div>
-        <label>状態<select onchange="updateContact('${c.id}', 'status', this.value)">${["未確認", "確認中", "完了"].map(v => `<option ${c.status === v ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+        <label>状態<select onchange="updateContact('${c.id}', 'status', this.value)">${["未確認", "確認中", "完了"].map(v => `<option value="${esc(v)}" ${c.status === v ? "selected" : ""}>${esc(displayStatus(v))}</option>`).join("")}</select></label>
         <label>一般番号を探すメモ<input value="${esc(c.generalNumberMemo)}" oninput="updateContact('${c.id}', 'generalNumberMemo', this.value)"></label>
         <label>Web問い合わせ可否メモ<input value="${esc(c.webMemo)}" oninput="updateContact('${c.id}', 'webMemo', this.value)"></label>
         <label>問い合わせ前メモ<textarea oninput="updateContact('${c.id}', 'beforeMemo', this.value)">${esc(c.beforeMemo)}</textarea></label>
