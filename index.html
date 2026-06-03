@@ -743,6 +743,9 @@
       state.shareSettings.mode = state.shareSettings.syncEnabled ? "gas" : state.shareSettings.mode;
       saveShareSettings();
       startAutoSync();
+      if (state.shareSettings.syncEnabled && state.shareSettings.gasEndpointUrl) {
+        syncWithSharedSheet({ auto: true });
+      }
     }
 
     function updateAutoLoadInterval(value) {
@@ -861,18 +864,26 @@
       const incoming = isProgressOnlyState(sharedState) ? sharedState : normalizeState(sharedState);
       const localIsNewer = compareUpdatedAt(state.lastUpdatedAt, incoming.lastUpdatedAt) > 0;
       const sharedIsNewer = compareUpdatedAt(incoming.lastUpdatedAt, state.lastUpdatedAt) > 0;
+      const sameVersion = !localIsNewer && !sharedIsNewer;
       const differentUser = incoming.lastUpdatedBy && state.lastUpdatedBy && incoming.lastUpdatedBy !== state.lastUpdatedBy;
       if (!options.force) {
-        if (sharedIsNewer) {
-          if (differentUser) alert("別の人が更新した可能性があります。共有データを読み込む前に、現在のデータを書き出してバックアップすることをおすすめします。");
-          const message = options.auto ? "共有側に新しいデータがあります。読み込みますか？" : "共有データの方が新しいです。読み込みますか？";
-          if (!confirm(message)) return false;
-        }
-        if (localIsNewer) {
-          if (confirm("この端末のデータの方が新しいです。共有先へ保存しますか？")) {
-            saveToSharedSheet();
+        if (options.auto) {
+          if (localIsNewer) {
+            setSyncStatus("この端末の方が新しいため、自動読み込みを見送りました", "warn", { toast: false });
+            return false;
           }
-          return false;
+          if (sameVersion) return false;
+        } else {
+          if (sharedIsNewer) {
+            if (differentUser) alert("別の人が更新した可能性があります。共有データを読み込む前に、現在のデータを書き出してバックアップすることをおすすめします。");
+            if (!confirm("共有データの方が新しいです。読み込みますか？")) return false;
+          }
+          if (localIsNewer) {
+            if (confirm("この端末のデータの方が新しいです。共有先へ保存しますか？")) {
+              saveToSharedSheet();
+            }
+            return false;
+          }
         }
       }
       if (isProgressOnlyState(sharedState)) {
@@ -978,20 +989,27 @@
     async function loadFromSharedSheet(options = {}) {
       try {
         if (isEditingText()) {
-          setSyncStatus("入力中のため共有読み込みを保留しました", "warn");
-          return;
+          setSyncStatus("入力中のため共有読み込みを保留しました", "warn", { toast: false });
+          return false;
         }
-        setSyncStatus("共有データを読み込み中...", "warn");
+        setSyncStatus("共有データを読み込み中...", "warn", { toast: false });
         const result = await requestGas("load");
+        let applied = false;
         if (result.data) {
           const incoming = { ...result.data, lastUpdatedAt: result.data.lastUpdatedAt || result.updatedAt, lastUpdatedBy: result.data.lastUpdatedBy || result.updatedBy };
-          applySharedState(incoming, options);
+          applied = applySharedState(incoming, options);
         }
         state.shareSettings.lastSyncAt = result.updatedAt || new Date().toLocaleString("ja-JP");
-        setSyncStatus("共有データを読み込みました", "ok");
+        if (applied) {
+          setSyncStatus(options.auto ? "共有データを自動反映しました" : "共有データを読み込みました", "ok");
+        } else {
+          setSyncStatus("共有データを確認しました（新しい変更なし）", "warn", { toast: false });
+        }
         saveShareSettings();
+        return applied;
       } catch (e) {
         setSyncStatus(e.message || "共有データの読み込みに失敗しました", "error");
+        return false;
       }
     }
 
@@ -1347,7 +1365,8 @@
     render();
     startAutoSync();
     if (getShareSettings().syncEnabled && getShareSettings().gasEndpointUrl) {
-      setSyncStatus("共有読み込み待機中。必要なら上部のボタンで読み込めます", "warn");
+      setSyncStatus("自動同期ON。共有データを確認中...", "warn", { toast: false });
+      syncWithSharedSheet({ auto: true });
     }
   </script>
 </body>
