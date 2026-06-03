@@ -64,6 +64,8 @@
     h2 { margin: 0 0 12px; font-size: 20px; letter-spacing: 0; }
     h3 { margin: 0 0 8px; font-size: 17px; letter-spacing: 0; }
     .return-date { color: var(--muted); font-weight: 700; }
+    .header-save-line { margin-top: 5px; }
+    .header-save-line .chip { font-size: 11px; padding: 2px 7px; }
     .progress-wrap { margin-top: 12px; }
     .bar { height: 12px; border-radius: 999px; background: #e8edf3; overflow: hidden; }
     .bar > span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--brand), var(--brand-2)); }
@@ -204,11 +206,6 @@
     details.utility-panel > summary::-webkit-details-marker { display: none; }
     .panel-body { padding: 16px; }
     .share-section { border-top: 5px solid var(--brand-2); }
-    .compact-share { padding: 8px 10px; border-top-width: 0; box-shadow: none; background: #fbfcfd; }
-    .compact-share .share-current { margin-top: 0; font-size: 12px; }
-    .compact-share #shareModeDescription { color: var(--muted); }
-    .compact-share .sync-status { padding: 4px 7px; font-size: 12px; font-weight: 700; }
-    .compact-share button { min-height: 30px; }
     .share-status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
     .share-box { border: 1px solid var(--line); border-radius: 8px; background: #fbfcfd; padding: 10px; }
     .share-box strong { display: block; margin-bottom: 4px; }
@@ -225,6 +222,23 @@
     .share-settings { display: grid; gap: 12px; }
     .share-note { color: var(--muted); font-size: 13px; margin: 0; }
     .admin-danger { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 20;
+      max-width: min(360px, calc(100vw - 32px));
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #1b2430;
+      color: #fff;
+      box-shadow: var(--shadow);
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .toast.ok { background: var(--ok); }
+    .toast.warn { background: var(--warn); }
+    .toast.error { background: var(--danger); }
     @media (max-width: 820px) {
       .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .dash-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -269,6 +283,7 @@
         <div>
           <h1>帰国後やること管理</h1>
           <div class="return-date">帰国予定：2026年6月</div>
+          <div class="header-save-line"><span class="chip" id="shareModeChip">保存：この端末のみ</span></div>
         </div>
       </div>
       <div class="progress-wrap">
@@ -279,15 +294,6 @@
   </header>
 
   <main>
-    <section class="share-section compact-share">
-      <div class="share-current">
-        <span class="chip" id="shareModeChip">保存：この端末のみ</span>
-        <span id="shareModeDescription">更新者：未設定 / 最終同期：未同期</span>
-        <span id="syncStatusBox" class="sync-status">ローカル保存</span>
-        <button id="topSharedLoadButton" class="small hidden" type="button" onclick="loadFromSharedSheet()">共有から読み込む</button>
-      </div>
-    </section>
-
     <section class="quick-check-section">
       <h2>まず終わらせるチェックリスト</h2>
       <p class="section-help">帰国直後に詰まりやすい項目です。2人で確認しながら、終わったものにチェックしてください。</p>
@@ -414,6 +420,7 @@
             <div>最終同期時刻：<span id="lastSyncAtText">未同期</span></div>
             <div>最終更新者：<span id="lastUpdatedByText">未設定</span></div>
             <div>最終更新時刻：<span id="lastUpdatedAtText">未更新</span></div>
+            <div>同期状態：<span id="syncStatusText">ローカル保存</span></div>
             <div class="toolbar">
               <button type="button" onclick="testGasConnection()">接続テスト</button>
               <button type="button" onclick="loadFromSharedSheet()">共有データを読み込む</button>
@@ -429,6 +436,7 @@
       </div>
     </details>
   </main>
+  <div id="toast" class="toast hidden"></div>
 
   <script>
     const STORAGE_KEY = "return-japan-checklist-state-v1";
@@ -657,6 +665,16 @@
       return "この端末・このブラウザ内に保存されています。別端末とは自動共有されません。";
     }
 
+    let toastTimer = null;
+    function showToast(message, type = "ok") {
+      const toast = document.getElementById("toast");
+      if (!toast) return;
+      toast.textContent = message;
+      toast.className = "toast " + type;
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add("hidden"), 3000);
+    }
+
     function renderShareSettings() {
       const settings = getShareSettings();
       const userNameInput = document.getElementById("shareUserName");
@@ -665,9 +683,6 @@
       const intervalInput = document.getElementById("autoLoadIntervalSec");
       const shareOn = settings.syncEnabled && settings.gasEndpointUrl;
       if (document.getElementById("shareModeChip")) document.getElementById("shareModeChip").textContent = shareOn ? "保存：Google共有ON" : (settings.mode === "manual" ? "保存：手動共有" : "保存：この端末のみ");
-      if (document.getElementById("shareModeDescription")) document.getElementById("shareModeDescription").textContent = `更新者：${state.lastUpdatedBy || "未設定"} / 更新：${formatDateTime(state.lastUpdatedAt)} / 最終同期：${settings.lastSyncAt || "未同期"}`;
-      const topButton = document.getElementById("topSharedLoadButton");
-      if (topButton) topButton.classList.toggle("hidden", !shareOn);
       if (userNameInput) userNameInput.value = localStorage.getItem(USER_NAME_KEY) || state.lastUpdatedBy || "";
       if (gasInput) gasInput.value = settings.gasEndpointUrl || "";
       if (syncSelect) syncSelect.value = String(Boolean(settings.syncEnabled));
@@ -675,7 +690,8 @@
       if (document.getElementById("lastSyncAtText")) document.getElementById("lastSyncAtText").textContent = settings.lastSyncAt || "未同期";
       if (document.getElementById("lastUpdatedByText")) document.getElementById("lastUpdatedByText").textContent = state.lastUpdatedBy || "未設定";
       if (document.getElementById("lastUpdatedAtText")) document.getElementById("lastUpdatedAtText").textContent = formatDateTime(state.lastUpdatedAt);
-      setSyncStatus(settings.syncStatus || (settings.gasEndpointUrl ? "共有設定待機中" : "共有URLが未設定です"), settings.syncStatusType || "warn", { persist: false });
+      if (document.getElementById("syncStatusText")) document.getElementById("syncStatusText").textContent = settings.syncStatus || (settings.gasEndpointUrl ? "共有設定待機中" : "共有URLが未設定です");
+      setSyncStatus(settings.syncStatus || (settings.gasEndpointUrl ? "共有設定待機中" : "共有URLが未設定です"), settings.syncStatusType || "warn", { persist: false, toast: false });
       startAutoSync();
     }
 
@@ -717,16 +733,14 @@
       settings.syncStatus = message;
       settings.syncStatusType = type;
       settings.syncError = type === "error" ? message : "";
-      const box = document.getElementById("syncStatusBox");
       const gasBox = document.getElementById("gasErrorText");
-      if (box) {
-        box.textContent = type === "error" ? "同期エラー" : message;
-        box.className = "sync-status " + type;
-      }
+      const syncText = document.getElementById("syncStatusText");
       if (gasBox) {
         gasBox.textContent = message;
         gasBox.className = "sync-status " + type;
       }
+      if (syncText) syncText.textContent = message;
+      if (options.toast !== false && type !== "warn") showToast(message, type === "error" ? "error" : "ok");
       if (options.persist !== false) localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
