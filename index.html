@@ -1,0 +1,1316 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>帰国後やること管理</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --text: #1b2430;
+      --muted: #667085;
+      --line: #d9e0ea;
+      --brand: #126a72;
+      --brand-2: #0e5b90;
+      --ok: #198754;
+      --warn: #c77600;
+      --danger: #c43d4b;
+      --s: #b42318;
+      --shadow: 0 8px 24px rgba(27, 36, 48, .08);
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    button, input, select, textarea { font: inherit; }
+    button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      min-height: 40px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    button.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+    button.danger { border-color: #f0b8bf; color: var(--danger); }
+    button.small { min-height: 32px; padding: 5px 9px; font-size: 13px; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      padding: 9px 10px;
+    }
+    textarea { min-height: 84px; resize: vertical; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(255,255,255,.96);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+    .header-inner, main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+    .title-row { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: clamp(24px, 4vw, 36px); letter-spacing: 0; }
+    h2 { margin: 0 0 12px; font-size: 20px; letter-spacing: 0; }
+    h3 { margin: 0 0 8px; font-size: 17px; letter-spacing: 0; }
+    .return-date { color: var(--muted); font-weight: 700; }
+    .progress-wrap { margin-top: 12px; }
+    .bar { height: 12px; border-radius: 999px; background: #e8edf3; overflow: hidden; }
+    .bar > span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--brand), var(--brand-2)); }
+    .stats, .dash-grid, .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .stat, section, .task-card, .mini-card, details.utility-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .stat { padding: 7px 8px; box-shadow: none; }
+    .stat strong { display: block; font-size: 18px; line-height: 1.1; }
+    .stat span { color: var(--muted); font-size: 11px; line-height: 1.2; }
+    main { display: grid; gap: 16px; }
+    section { padding: 16px; }
+    .dash-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .dash-card {
+      border-left: 4px solid var(--brand);
+      padding: 8px 10px;
+      background: #fbfcfd;
+      border-radius: 8px;
+      min-height: 64px;
+    }
+    .dash-card strong { display: block; font-size: 20px; line-height: 1.15; }
+    .dash-card span { color: var(--muted); font-size: 12px; }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(140px, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+    label { display: grid; gap: 4px; font-size: 13px; font-weight: 700; color: #344054; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .task-list { display: grid; gap: 10px; }
+    .task-card { padding: 12px; box-shadow: none; }
+    .task-card.done { opacity: .58; }
+    .task-top {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+    .task-title { font-weight: 800; font-size: 16px; overflow-wrap: anywhere; }
+    .task-title.s { color: var(--s); }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #eef4f7;
+      color: #344054;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .chip.s { background: #fee4e2; color: var(--s); }
+    .chip.phone, .chip.warn { background: #fff2d6; color: #8a4b00; }
+    .chip.ok { background: #dcfce7; color: #166534; }
+    .chip.check { background: #e0f2fe; color: #075985; }
+    details { margin-top: 10px; }
+    summary { cursor: pointer; color: var(--brand-2); font-weight: 800; }
+    .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+    .detail-box { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: #fbfcfd; }
+    .detail-box b { display: block; margin-bottom: 4px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .mini-card { padding: 12px; box-shadow: none; }
+    .mini-card ul { margin: 8px 0 0; padding-left: 20px; }
+    .doc-grid, .contact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .check-row, .contact-row {
+      display: grid;
+      gap: 8px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      padding: 10px;
+    }
+    .check-row { grid-template-columns: auto 1fr; }
+    .contact-row { grid-template-columns: 1fr; }
+    .contact-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-weight: 800; }
+    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .wide { grid-column: 1 / -1; }
+    .hidden { display: none !important; }
+    .file-input { max-width: 340px; }
+    .empty { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 8px; }
+
+    .section-help { margin: -4px 0 12px; color: var(--muted); font-size: 14px; }
+    .quick-check-section { border-top: 5px solid var(--brand); }
+    .quick-progress-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+      color: #344054;
+      font-weight: 800;
+    }
+    .quick-progress-line span { color: var(--muted); font-size: 13px; font-weight: 700; }
+    .quick-progress-bar { height: 8px; margin-bottom: 12px; }
+    .quick-filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .quick-filter-bar button.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .quick-check-list { display: grid; gap: 2px; border-top: 1px solid var(--line); }
+    .quick-check-item {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 52px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .quick-check-item input[type="checkbox"] { width: 24px; height: 24px; accent-color: var(--brand); }
+    .quick-check-main { min-width: 0; font-weight: 800; overflow-wrap: anywhere; }
+    .quick-check-main.s { color: var(--s); }
+    .quick-check-meta { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; min-width: 150px; }
+    .quick-check-complete { min-width: 56px; color: var(--ok); font-weight: 900; text-align: right; }
+    .quick-check-item.done { opacity: .56; }
+    .quick-check-item.done .quick-check-main { text-decoration: line-through; }
+    .quick-today.active { background: #e0f2fe; border-color: #7dd3fc; color: #075985; }
+
+    details.utility-panel { padding: 0; overflow: hidden; }
+    details.utility-panel > summary {
+      list-style: none;
+      padding: 11px 14px;
+      color: var(--text);
+      border-bottom: 1px solid transparent;
+    }
+    details.utility-panel > summary h2 { margin: 0; font-size: 17px; }
+    details.utility-panel[open] > summary { border-bottom-color: var(--line); }
+    details.utility-panel > summary::-webkit-details-marker { display: none; }
+    .panel-body { padding: 16px; }
+    .share-section { border-top: 5px solid var(--brand-2); }
+    .compact-share { padding: 8px 10px; border-top-width: 0; box-shadow: none; background: #fbfcfd; }
+    .compact-share .share-current { margin-top: 0; font-size: 12px; }
+    .compact-share #shareModeDescription { color: var(--muted); }
+    .compact-share .sync-status { padding: 4px 7px; font-size: 12px; font-weight: 700; }
+    .compact-share button { min-height: 30px; }
+    .share-status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .share-box { border: 1px solid var(--line); border-radius: 8px; background: #fbfcfd; padding: 10px; }
+    .share-box strong { display: block; margin-bottom: 4px; }
+    .share-current { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+    .sync-status { border-radius: 8px; padding: 9px 10px; background: #eef4f7; color: #344054; font-weight: 800; }
+    .compact-dashboard { padding: 12px; }
+    .compact-dashboard h2 { font-size: 17px; margin-bottom: 8px; }
+    .inline-details { margin-top: 8px; }
+    .inline-details summary { color: var(--brand-2); font-size: 13px; }
+    .sync-status.ok { background: #dcfce7; color: #166534; }
+    .sync-status.warn { background: #fff2d6; color: #8a4b00; }
+    .sync-status.error { background: #fee4e2; color: var(--danger); }
+    .share-settings .sync-status + .sync-status { display: none; }
+    .share-settings { display: grid; gap: 12px; }
+    .share-note { color: var(--muted); font-size: 13px; margin: 0; }
+    .admin-danger { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+    @media (max-width: 820px) {
+      .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .dash-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .summary-grid, .doc-grid, .contact-grid, .detail-grid, .form-grid, .share-status-grid { grid-template-columns: 1fr; }
+      .quick-check-item { grid-template-columns: 34px minmax(0, 1fr) auto; }
+      .quick-check-complete { grid-column: 2 / -1; text-align: left; }
+      .filters { grid-template-columns: 1fr 1fr; }
+      .task-top { grid-template-columns: auto 1fr; }
+      .task-top > .actions { grid-column: 1 / -1; }
+      section { padding: 14px; }
+      .toolbar button { flex: 1 1 auto; }
+    }
+    @media (max-width: 520px) {
+      .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+      .stat { padding: 6px 7px; }
+      .stat strong { font-size: 16px; }
+      .stat span { font-size: 10px; line-height: 1.2; }
+      .progress-wrap { margin-top: 8px; }
+      .filters { grid-template-columns: 1fr; }
+      .quick-check-item { grid-template-columns: 30px minmax(0, 1fr); gap: 8px; }
+      .quick-check-meta, .quick-check-complete { grid-column: 2 / -1; justify-content: flex-start; min-width: 0; }
+      .quick-filter-bar button { flex: 1 1 calc(50% - 8px); }
+      .header-inner, main { padding: 12px; }
+      button { width: auto; }
+      .task-card { padding: 10px; }
+    }
+    @media print {
+      header, .filters, .toolbar, .actions, .edit-area, button, input[type="file"], .share-section, .utility-panel { display: none !important; }
+      body { background: #fff; color: #000; }
+      main { max-width: none; padding: 0; }
+      section, .task-card, .mini-card, .check-row, .contact-row { box-shadow: none; break-inside: avoid; }
+      .task-card.done { display: none; }
+      details { display: block; }
+      details > * { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="title-row">
+        <div>
+          <h1>帰国後やること管理</h1>
+          <div class="return-date">帰国予定：2026年6月</div>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="bar" aria-label="全体進捗"><span id="progressBar"></span></div>
+      </div>
+      <div class="stats" id="headerStats"></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="share-section compact-share">
+      <div class="share-current">
+        <span class="chip" id="shareModeChip">保存：この端末のみ</span>
+        <span id="shareModeDescription">更新者：未設定 / 最終同期：未同期</span>
+        <span id="syncStatusBox" class="sync-status">ローカル保存</span>
+        <button id="topSharedLoadButton" class="small hidden" type="button" onclick="loadFromSharedSheet()">共有から読み込む</button>
+      </div>
+    </section>
+
+    <section class="quick-check-section">
+      <h2>まず終わらせるチェックリスト</h2>
+      <p class="section-help">帰国直後に詰まりやすい項目です。2人で確認しながら、終わったものにチェックしてください。</p>
+      <div class="quick-progress-line" id="quickProgressText"></div>
+      <div class="bar quick-progress-bar" aria-label="重要チェックリスト進捗"><span id="quickProgressBar"></span></div>
+      <div class="quick-filter-bar" id="quickFilterButtons">
+        <button type="button" data-mode="open" onclick="setQuickFilter('open')">未完了だけ</button>
+        <button type="button" data-mode="today" onclick="setQuickFilter('today')">今日やる</button>
+        <button type="button" data-mode="city" onclick="setQuickFilter('city')">市役所</button>
+        <button type="button" data-mode="phone" onclick="setQuickFilter('phone')">電話必要</button>
+        <button type="button" data-mode="all" onclick="setQuickFilter('all')">全部</button>
+      </div>
+      <div class="quick-check-list" id="quickChecklist"></div>
+    </section>
+
+    <section class="compact-dashboard">
+      <h2>ダッシュボード</h2>
+      <div class="dash-grid" id="dashboard"></div>
+      <details class="inline-details">
+        <summary>細かい集計を見る</summary>
+        <div class="summary-grid">
+          <div class="mini-card"><h3>期限別集計</h3><div id="timingSummary"></div></div>
+          <div class="mini-card"><h3>分野別集計</h3><div id="categorySummary"></div></div>
+          <div class="mini-card"><h3>Sランク未完了</h3><ul id="sOpenList"></ul></div>
+        </div>
+      </details>
+    </section>
+
+    <details class="utility-panel">
+      <summary><h2>詳細検索・絞り込み</h2></summary>
+      <div class="panel-body">
+        <div class="filters">
+          <label>期限<select id="filterTiming"></select></label>
+          <label>分野<select id="filterCategory"></select></label>
+          <label>優先度<select id="filterPriority"></select></label>
+          <label>状態<select id="filterStatus"></select></label>
+          <label>キーワード検索<input id="searchText" type="search" placeholder="タスク名・メモ・注意点"></label>
+        </div>
+        <div class="toolbar">
+          <button onclick="clearFilters()">絞り込み解除</button>
+        </div>
+      </div>
+    </details>
+
+    <section class="edit-area hidden" id="taskFormSection">
+      <h2 id="formTitle">タスク追加</h2>
+      <form id="taskForm" class="form-grid">
+        <input type="hidden" id="editId">
+        <label>タスク名<input id="taskTitle" required></label>
+        <label>分野<select id="taskCategory"></select></label>
+        <label>期限<select id="taskTiming"></select></label>
+        <label>優先度<select id="taskPriority"></select></label>
+        <label>状態<select id="taskStatus"></select></label>
+        <label>電話必要<select id="taskPhone"><option value="false">不要</option><option value="true">必要</option></select></label>
+        <label class="wide">必要書類<input id="taskDocuments" placeholder="カンマ区切り"></label>
+        <label class="wide">関連手続き<input id="taskRelated" placeholder="カンマ区切り"></label>
+        <label class="wide">注意点<textarea id="taskCaution"></textarea></label>
+        <label class="wide">メモ<textarea id="taskNote"></textarea></label>
+        <div class="toolbar wide">
+          <button class="primary" type="submit">保存</button>
+          <button type="button" onclick="hideTaskForm()">閉じる</button>
+        </div>
+      </form>
+    </section>
+
+    <details class="utility-panel">
+      <summary><h2>詳細タスクリスト</h2></summary>
+      <div class="panel-body">
+        <div id="taskCountLine"></div>
+        <div class="task-list" id="taskList"></div>
+      </div>
+    </details>
+
+    <details class="utility-panel">
+      <summary><h2>市役所系まとめ</h2></summary>
+      <div class="panel-body">
+        <div class="summary-grid">
+          <div class="mini-card"><h3>市役所系の未完了</h3><ul id="cityTasks"></ul></div>
+          <div class="mini-card"><h3>市役所に行くときの持ち物</h3><ul id="cityDocuments"></ul></div>
+          <div class="mini-card"><h3>専用チェック項目</h3><ul id="cityChecklist"></ul></div>
+        </div>
+      </div>
+    </details>
+
+    <details class="utility-panel">
+      <summary><h2>電話・問い合わせ管理</h2></summary>
+      <div class="panel-body">
+        <div class="contact-grid" id="contacts"></div>
+      </div>
+    </details>
+
+    <details class="utility-panel">
+      <summary><h2>重要書類リスト</h2></summary>
+      <div class="panel-body">
+        <div class="doc-grid" id="documents"></div>
+      </div>
+    </details>
+
+    <details class="utility-panel" id="adminMenu">
+      <summary><h2>管理メニュー</h2></summary>
+      <div class="panel-body">
+        <p class="section-help">通常の利用では開く必要はありません。バックアップ、共有設定、初期化などの管理操作を行う場所です。</p>
+        <div class="toolbar">
+          <button onclick="showTaskForm()">タスク追加</button>
+          <button onclick="exportJson()">共有データを書き出す</button>
+          <label class="file-input">共有データを読み込む<input id="importFile" type="file" accept="application/json"></label>
+          <button onclick="restoreInitial()">初期データ復元</button>
+        </div>
+        <div class="toolbar">
+          <button type="button" onclick="setShareMode('local')">ローカル保存</button>
+          <button type="button" onclick="setShareMode('manual')">手動共有</button>
+          <button type="button" onclick="setShareMode('gas')">Googleスプレッドシート共有</button>
+        </div>
+        <p class="share-note">この機能は、バックアップや別端末への手動共有に使います。2人で自動共有する機能ではありません。</p>
+
+        <section class="share-box">
+          <h3>Googleスプレッドシート共有設定</h3>
+          <p class="section-help">2人で同じ進捗を共有したい場合は、Googleスプレッドシート共有モードを使います。Google Apps ScriptのWebアプリURLを設定すると、共有データの読み込み・保存ができるようになります。初期状態では未設定です。</p>
+          <div class="share-settings">
+            <label>ユーザー名<input id="shareUserName" placeholder="例：なつき" oninput="updateShareUserName(this.value)"></label>
+            <label>GAS WebアプリURL<input id="gasEndpointUrl" placeholder="https://script.google.com/macros/s/.../exec" oninput="updateGasEndpoint(this.value)"></label>
+            <label><span>自動同期</span><select id="syncEnabled" onchange="updateSyncEnabled(this.value)"><option value="false">OFF</option><option value="true">ON</option></select></label>
+            <label>自動読み込み間隔（秒）<input id="autoLoadIntervalSec" type="number" min="15" step="15" value="60" oninput="updateAutoLoadInterval(this.value)"></label>
+            <div>最終同期時刻：<span id="lastSyncAtText">未同期</span></div>
+            <div>最終更新者：<span id="lastUpdatedByText">未設定</span></div>
+            <div>最終更新時刻：<span id="lastUpdatedAtText">未更新</span></div>
+            <div class="toolbar">
+              <button type="button" onclick="testGasConnection()">接続テスト</button>
+              <button type="button" onclick="loadFromSharedSheet()">共有データを読み込む</button>
+              <button type="button" onclick="saveToSharedSheet()">共有データを保存する</button>
+            </div>
+            <div id="gasErrorText" class="sync-status warn">共有URLが未設定です</div>
+          </div>
+        </section>
+
+        <div class="admin-danger">
+          <button class="danger" onclick="resetAll()">全リセット</button>
+        </div>
+      </div>
+    </details>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "return-japan-checklist-state-v1";
+    const USER_NAME_KEY = "return-japan-checklist-user-name-v1";
+    const TIMINGS = ["帰国当日〜3日以内", "14日以内", "1〜2週間以内", "1か月以内", "1〜2か月以内", "3〜6か月以内"];
+    const CATEGORIES = ["住所・市役所", "マイナンバー", "健康保険", "年金", "銀行", "証券", "保険", "税金", "携帯・通信", "住居", "車", "子育て", "仕事", "資格・学習", "生活用品", "電話・問い合わせ", "重要書類"];
+    const PRIORITIES = ["S", "A", "B", "C"];
+    const STATUSES = ["未完了", "完了", "要確認"];
+    const CITY_ITEMS = ["転入届", "住民票", "マイナンバーカード住所変更", "マイナンバーカード継続利用", "電子証明書", "国民健康保険", "国民年金", "印鑑登録", "印鑑証明", "課税証明書", "非課税証明書", "納税証明書", "児童手当", "子ども医療費助成", "母子健康手帳", "妊婦健診補助券", "保育園申請", "ごみ分別", "防災マップ", "選挙人名簿"];
+    const IMPORTANT_DOCS = ["パスポート", "航空券控え・搭乗券", "マイナンバーカード", "運転免許証", "戸籍謄本", "戸籍附票", "年金手帳または基礎年金番号通知書", "海外勤務の在職証明", "給与明細", "源泉徴収票", "海外銀行の残高証明", "海外送金履歴", "証券口座の取引履歴", "保険証券", "医療記録", "予防接種記録", "婚姻・出生関係書類", "賃貸・住宅関係書類", "印鑑", "実印候補の印鑑"];
+    const CITY_DOCS = ["パスポート", "航空券控え・搭乗券", "マイナンバーカード", "運転免許証", "戸籍謄本", "戸籍附票", "印鑑", "実印候補の印鑑", "年金手帳または基礎年金番号通知書", "会社の健康保険加入予定が分かる資料", "海外住所・滞在証明", "委任状"];
+    const CONTACT_NAMES = ["市役所・区役所", "年金事務所", "税務署", "健康保険組合", "銀行", "野村證券", "楽天証券", "生命保険会社", "医療保険会社", "不動産会社", "引越し業者", "携帯会社", "車販売店", "自動車保険会社", "警察署・免許センター"];
+
+    const QUICK_CHECK_TITLES = ["日本円の現金を確保", "銀行キャッシュカードが使えるか確認", "転入届を提出", "住民票を登録", "マイナンバーカードの住所変更", "マイナンバーカードの継続利用手続き", "会社の健康保険に入るか確認", "空白期間がある場合、国民健康保険の加入を確認", "厚生年金加入日を確認", "空白期間がある場合、国民年金の手続きを確認", "住民票を数通取得", "運転免許証の住所変更", "日本の銀行口座の住所変更", "野村證券の登録住所・居住者区分を確認", "楽天証券の住所・電話番号・マイナンバーを更新", "生命保険の住所変更", "医療保険の住所変更"];
+    const TASK_SEEDS = [
+      ["帰国当日〜3日以内", ["最初に住む場所へ到着", "郵便物を受け取れる住所を確認", "住民登録できる住所か確認", "家族・会社・重要連絡先へ帰国報告", "荷物の到着予定を確認", "別送品の通関・配送状況を確認", "日本で使うスマホ回線を開通", "SMS認証できるか確認", "通話発信できるか確認", "0120・0800・0570・一般番号への発信可否を確認", "Wi-Fi環境を確保", "日本円の現金を確保", "日本のクレジットカードが使えるか確認", "銀行キャッシュカードが使えるか確認", "PayPay、楽天ペイ、Suica等を再設定", "海外カードの利用停止・継続を確認"]],
+      ["14日以内", ["転入届を提出", "住民票を登録", "世帯主・世帯構成を確認", "住民票を数通取得", "住民票記載事項証明書が必要か確認", "マイナンバーカードの住所変更", "マイナンバーカードの継続利用手続き", "電子証明書の有効性を確認", "署名用電子証明書のパスワードを確認", "利用者証明用電子証明書のパスワードを確認", "マイナポータルにログインできるか確認", "カード失効時は再申請", "会社の健康保険に入るか確認", "空白期間がある場合、国民健康保険の加入を確認", "保険証または資格確認書の受取方法を確認", "マイナ保険証の利用登録を確認", "扶養に入れる家族がいる場合、会社へ確認", "厚生年金加入日を確認", "空白期間がある場合、国民年金の手続きを確認", "基礎年金番号を確認", "配偶者の第3号被保険者該当性を確認", "海外任意加入期間がある場合、年金記録を確認", "実印を用意", "印鑑登録", "印鑑証明書を取得", "戸籍謄本が必要か確認", "戸籍附票が必要か確認", "課税証明書・非課税証明書の発行可否を確認", "納税証明書の発行可否を確認", "児童手当の対象有無を確認", "子ども医療費助成を確認", "保育園申請時期を確認", "妊娠中の場合、母子健康手帳・妊婦健診補助券を確認", "予防接種履歴を自治体に確認", "小児科・産婦人科を探す", "ごみ分別ルールを確認", "指定ごみ袋を購入", "粗大ごみの出し方を確認", "ハザードマップを確認", "避難所を確認", "自治会・町内会の有無を確認"]],
+      ["1〜2週間以内", ["日本の銀行口座の住所変更", "電話番号変更", "メールアドレス変更", "マイナンバー登録状況を確認", "キャッシュカードの有効性を確認", "インターネットバンキングにログイン", "ワンタイムパスワード設定を確認", "海外送金履歴・残高証明を保管", "給与振込口座を決める", "野村證券の登録住所・居住者区分を確認", "楽天証券の口座状態を確認", "楽天証券の住所・電話番号・マイナンバーを更新", "特定口座の有無を確認", "NISA口座の状態を確認", "野村證券から楽天証券への移管可否を確認", "移管対象が特定口座か一般口座か確認", "NISA商品はそのまま移管できない点を確認", "移管手数料を確認", "必要書類を請求", "移管完了後、取得単価・数量を確認", "生命保険の住所変更", "医療保険の住所変更", "保険料支払口座を確認", "保障内容を一覧化", "不要な特約を確認", "解約・減額・払済の要否を検討", "妊娠・出産関連の給付条件を確認", "火災保険の加入要否を確認", "自動車保険の候補を比較"]],
+      ["1か月以内", ["仮住まいの期限を確認", "本住居の候補エリアを決める", "家賃上限を決める", "駐車場の有無を確認", "通勤時間を確認", "保育園・病院・スーパー・駅への距離を確認", "ハザードマップを確認", "賃貸審査用の書類を準備", "住民票、収入証明、在職証明を用意", "電気・ガス・水道を契約", "インターネット回線を契約", "車が必要な地域か判断", "すぐ買うか、レンタカー・カーシェアでつなぐか決める", "駐車場を確保", "車庫証明の必要書類を確認", "中古車・新車の予算を決める", "任意保険の見積を取る", "ドライブレコーダーを検討", "雪道地域ならスタッドレスタイヤを検討", "チャイルドシートが必要か確認", "運転免許証の住所変更", "本人確認書類の住所を統一", "銀行・証券・保険・携帯の登録住所を一致させる"]],
+      ["1〜2か月以内", ["勤務先へ帰国後住所を提出", "給与振込口座を提出", "健康保険・厚生年金の加入日を確認", "扶養申請の必要性を確認", "通勤手当・住宅手当の条件を確認", "源泉徴収票・給与明細を保管", "海外勤務期間の証明を保管", "帰国年の所得税の扱いを確認", "海外所得の有無を整理", "海外口座の残高証明を保管", "海外から日本への送金履歴を保管", "証券取引履歴を保管", "確定申告が必要か確認", "住民税の課税年度を確認", "ふるさと納税を使えるか確認", "住む自治体の子育て支援を確認", "産婦人科・小児科を探す", "保育園の入園時期と申請期限を確認", "教育費の積立方針を決める", "NISAの積立設定を再開", "生活防衛資金を確認", "車・住宅・教育費・資格費用の予算を整理"]],
+      ["3〜6か月以内", ["楽天モバイル、povo、ahamo、LINEMO等を比較", "電話が減ったら通話プランを見直す", "サブ回線の必要性を判断", "固定回線とモバイル回線の費用を比較", "月間生活費を集計", "家賃・通信費・保険料を見直す", "不要なサブスクを解約", "クレジットカードを整理", "楽天経済圏を使うか判断", "投資積立額を再設定", "楽天証券で積立設定", "NISA口座の金融機関を確認", "野村證券からの移管完了を確認", "保有商品の信託報酬を確認", "高コスト商品を整理", "低コストインデックス中心に再構成", "社労士試験後の方針を決める", "中小企業診断士の学習計画を立てる", "TOEIC学習を再開", "学習アプリ・Anki・問題集を整理", "平日・休日の学習時間を固定", "寝具を購入", "デスク・椅子を購入", "家電を購入", "防災用品を揃える", "収納用品を揃える", "車用品を揃える", "冬物・雨具を揃える"]]
+    ];
+
+    const keyword = (text, words) => words.some(word => text.includes(word));
+    const splitList = value => String(value || "").split(",").map(v => v.trim()).filter(Boolean);
+    const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    function categoryFor(title) {
+      if (keyword(title, ["転入", "住民票", "世帯", "印鑑", "戸籍", "課税証明", "納税証明", "ごみ", "ハザード", "避難所", "自治会"])) return "住所・市役所";
+      if (keyword(title, ["マイナンバー", "マイナポータル", "電子証明", "パスワード"])) return "マイナンバー";
+      if (keyword(title, ["健康保険", "保険証", "マイナ保険", "扶養"])) return "健康保険";
+      if (keyword(title, ["年金", "基礎年金", "第3号"])) return "年金";
+      if (keyword(title, ["銀行", "キャッシュカード", "バンキング", "給与振込", "海外送金", "残高証明", "口座"])) return "銀行";
+      if (keyword(title, ["証券", "野村", "楽天証券", "NISA", "移管", "特定口座", "信託報酬", "投資", "積立"])) return "証券";
+      if (keyword(title, ["生命保険", "医療保険", "火災保険", "自動車保険", "保障", "特約", "保険料", "給付"])) return "保険";
+      if (keyword(title, ["所得税", "住民税", "確定申告", "ふるさと納税", "源泉徴収", "税務"])) return "税金";
+      if (keyword(title, ["スマホ", "SMS", "通話", "Wi-Fi", "電話番号", "携帯", "通信", "回線", "モバイル", "0120", "0800", "0570"])) return "携帯・通信";
+      if (keyword(title, ["住居", "仮住まい", "家賃", "駐車場", "通勤", "賃貸", "電気", "ガス", "水道", "不動産"])) return "住居";
+      if (keyword(title, ["車", "免許", "レンタカー", "カーシェア", "車庫", "中古車", "新車", "ドライブレコーダー", "スタッドレス", "チャイルドシート"])) return "車";
+      if (keyword(title, ["児童", "子ども", "保育園", "妊娠", "母子", "妊婦", "予防接種", "小児科", "産婦人科", "教育費", "子育て"])) return "子育て";
+      if (keyword(title, ["会社", "勤務先", "仕事", "通勤手当", "住宅手当", "在職", "海外勤務"])) return "仕事";
+      if (keyword(title, ["社労士", "中小企業診断士", "TOEIC", "学習", "Anki", "問題集", "資格"])) return "資格・学習";
+      if (keyword(title, ["寝具", "デスク", "椅子", "家電", "防災用品", "収納", "冬物", "雨具", "指定ごみ袋"])) return "生活用品";
+      if (keyword(title, ["必要書類", "書類", "証明", "履歴", "医療記録", "記録", "パスポート", "航空券"])) return "重要書類";
+      return "電話・問い合わせ";
+    }
+
+    function priorityFor(title, timing) {
+      if (keyword(title, ["転入届", "住民票", "マイナンバー", "健康保険", "年金", "携帯", "スマホ", "電話番号", "銀行キャッシュカード", "バンキング", "別送品", "日本円", "SMS"])) return "S";
+      if (keyword(title, ["証券", "保険の住所変更", "免許証", "印鑑登録", "住居", "電気", "ガス", "水道", "インターネット", "税", "会社", "勤務先"])) return "A";
+      if (keyword(title, ["移管", "NISA", "保険", "車", "家具", "家電", "子育て", "資格", "学習"])) return "B";
+      if (timing === "3〜6か月以内") return "C";
+      return "B";
+    }
+
+    function documentsFor(title, category) {
+      const docs = [];
+      if (keyword(title + category, ["市役所", "転入", "住民票", "住所", "マイナンバー"])) docs.push("パスポート", "マイナンバーカード", "航空券控え・搭乗券");
+      if (keyword(title + category, ["年金"])) docs.push("年金手帳または基礎年金番号通知書");
+      if (keyword(title + category, ["印鑑"])) docs.push("印鑑", "実印候補の印鑑");
+      if (keyword(title + category, ["戸籍"])) docs.push("戸籍謄本", "戸籍附票");
+      if (keyword(title + category, ["銀行", "証券", "保険", "税金", "賃貸", "住居", "仕事"])) docs.push("本人確認書類", "住民票");
+      return [...new Set(docs)];
+    }
+
+    function cautionFor(title) {
+      if (title.includes("転入届")) return "住み始めた日から14日以内が基本。ホテル等では住民登録できない可能性あり。";
+      if (title.includes("0120") || title.includes("0800") || title.includes("0570")) return "0570は通話料が高くなりやすい。0120・0800は携帯やIP電話から発信できない場合があるため一般番号も探す。";
+      if (title.includes("マイナンバーカード")) return "国外転出前後の状態により手続きが変わるため、自治体窓口で確認する。";
+      if (title.includes("NISA")) return "NISA商品は移管や再開条件が通常口座と異なる可能性がある。";
+      if (title.includes("健康保険") || title.includes("年金")) return "会社加入日と空白期間の有無を先に確認する。";
+      return "";
+    }
+
+    function buildInitialTasks() {
+      let n = 1;
+      return TASK_SEEDS.flatMap(([timing, titles]) => titles.map(title => {
+        const category = categoryFor(title);
+        return {
+          id: "task-" + String(n++).padStart(3, "0"),
+          title,
+          category,
+          timing,
+          priority: priorityFor(title, timing),
+          status: "未完了",
+          phoneRequired: keyword(title, ["電話", "問い合わせ", "確認", "請求", "見積", "会社", "役所", "年金", "保険", "銀行", "証券", "携帯"]),
+          today: false,
+          later: false,
+          documents: documentsFor(title, category),
+          related: relatedFor(title, category),
+          note: "",
+          caution: cautionFor(title)
+        };
+      }));
+    }
+
+    function relatedFor(title, category) {
+      const related = [];
+      if (category === "住所・市役所") related.push("住民票", "マイナンバー", "国民健康保険");
+      if (category === "証券") related.push("マイナンバー", "住所変更", "税金");
+      if (category === "保険") related.push("住所変更", "支払口座", "保障見直し");
+      if (category === "子育て") related.push("児童手当", "医療費助成", "保育園");
+      return related;
+    }
+
+    function buildInitialState() {
+      return normalizeState({
+        tasks: buildInitialTasks(),
+        documents: IMPORTANT_DOCS.map((name, i) => ({ id: "doc-" + i, name, done: false, note: "" })),
+        contacts: CONTACT_NAMES.map((name, i) => ({
+          id: "contact-" + i,
+          name,
+          need: i < 4 ? "高" : i < 10 ? "中" : "低",
+          status: "未確認",
+          naviWarning: ["市役所・区役所", "年金事務所", "税務署", "健康保険組合", "銀行", "携帯会社"].includes(name),
+          tollFreeWarning: ["銀行", "野村證券", "楽天証券", "生命保険会社", "医療保険会社", "携帯会社"].includes(name),
+          generalNumberMemo: "",
+          webMemo: "",
+          beforeMemo: "",
+          resultMemo: ""
+        }))
+      });
+    }
+
+    let state = loadState();
+    let quickFilterMode = "all";
+    let syncTimer = null;
+
+    function defaultShareSettings() {
+      return {
+        mode: "local",
+        gasEndpointUrl: "",
+        syncEnabled: false,
+        autoLoadIntervalSec: 60,
+        lastSyncAt: "",
+        syncStatus: "ローカル保存",
+        syncStatusType: "warn",
+        syncError: ""
+      };
+    }
+
+    function getUserName() {
+      return localStorage.getItem(USER_NAME_KEY) || state?.lastUpdatedBy || "未設定";
+    }
+
+    function normalizeState(input) {
+      const initial = input || {};
+      const shareSettings = { ...defaultShareSettings(), ...(initial.shareSettings || {}) };
+      return {
+        ...initial,
+        tasks: Array.isArray(initial.tasks) ? initial.tasks : buildInitialTasks(),
+        documents: Array.isArray(initial.documents) ? initial.documents : IMPORTANT_DOCS.map((name, i) => ({ id: "doc-" + i, name, done: false, note: "" })),
+        contacts: Array.isArray(initial.contacts) ? initial.contacts : buildInitialState().contacts,
+        lastUpdatedAt: initial.lastUpdatedAt || new Date().toISOString(),
+        lastUpdatedBy: initial.lastUpdatedBy || localStorage.getItem(USER_NAME_KEY) || "未設定",
+        shareSettings
+      };
+    }
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved && Array.isArray(saved.tasks)) return normalizeState(saved);
+      } catch (e) {}
+      return buildInitialState();
+    }
+
+    function save(options = {}) {
+      const { sync = true, touch = true } = options;
+      if (touch) {
+        state.lastUpdatedAt = new Date().toISOString();
+        state.lastUpdatedBy = getUserName();
+      }
+      state = normalizeState(state);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (sync && state.shareSettings.syncEnabled && state.shareSettings.gasEndpointUrl) {
+        saveToSharedSheet({ silent: true }).catch(() => setSyncStatus("共有保存に失敗しました。ローカルには保存済みです", "error"));
+      }
+    }
+
+    function fillSelect(id, values, allLabel) {
+      const el = document.getElementById(id);
+      el.innerHTML = (allLabel ? `<option value="">${allLabel}</option>` : "") + values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+    }
+    function initControls() {
+      fillSelect("filterTiming", TIMINGS, "すべて");
+      fillSelect("filterCategory", CATEGORIES, "すべて");
+      fillSelect("filterPriority", PRIORITIES, "すべて");
+      fillSelect("filterStatus", ["未完了", "完了", "要確認"], "すべて");
+      fillSelect("taskCategory", CATEGORIES);
+      fillSelect("taskTiming", TIMINGS);
+      fillSelect("taskPriority", PRIORITIES);
+      fillSelect("taskStatus", STATUSES);
+      ["filterTiming", "filterCategory", "filterPriority", "filterStatus", "searchText"].forEach(id => document.getElementById(id).addEventListener("input", render));
+      document.getElementById("importFile").addEventListener("change", importJson);
+      document.getElementById("taskForm").addEventListener("submit", saveTaskFromForm);
+      renderShareSettings();
+    }
+
+
+    function getShareSettings() {
+      state.shareSettings = { ...defaultShareSettings(), ...(state.shareSettings || {}) };
+      return state.shareSettings;
+    }
+
+    function saveShareSettings() {
+      state.shareSettings = { ...defaultShareSettings(), ...(state.shareSettings || {}) };
+      save({ sync: false, touch: false });
+      renderShareSettings();
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "未更新";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleString("ja-JP", { hour: "2-digit", minute: "2-digit", month: "numeric", day: "numeric" });
+    }
+
+    function modeLabel(mode) {
+      return { local: "ローカル保存", manual: "手動共有", gas: "Googleスプレッドシート共有" }[mode] || "ローカル保存";
+    }
+
+    function modeDescription(mode) {
+      if (mode === "manual") return "進捗データをJSONファイルとして書き出し、LINE、Google Drive、AirDropなどで相手に渡して共有します。リアルタイム共有ではありません。";
+      if (mode === "gas") return "Google Apps ScriptのWebアプリURLを設定すると、2人で同じ進捗の読み込み・保存ができます。";
+      return "この端末・このブラウザ内に保存されています。別端末とは自動共有されません。";
+    }
+
+    function renderShareSettings() {
+      const settings = getShareSettings();
+      const userNameInput = document.getElementById("shareUserName");
+      const gasInput = document.getElementById("gasEndpointUrl");
+      const syncSelect = document.getElementById("syncEnabled");
+      const intervalInput = document.getElementById("autoLoadIntervalSec");
+      const shareOn = settings.syncEnabled && settings.gasEndpointUrl;
+      if (document.getElementById("shareModeChip")) document.getElementById("shareModeChip").textContent = shareOn ? "保存：Google共有ON" : (settings.mode === "manual" ? "保存：手動共有" : "保存：この端末のみ");
+      if (document.getElementById("shareModeDescription")) document.getElementById("shareModeDescription").textContent = `更新者：${state.lastUpdatedBy || "未設定"} / 更新：${formatDateTime(state.lastUpdatedAt)} / 最終同期：${settings.lastSyncAt || "未同期"}`;
+      const topButton = document.getElementById("topSharedLoadButton");
+      if (topButton) topButton.classList.toggle("hidden", !shareOn);
+      if (userNameInput) userNameInput.value = localStorage.getItem(USER_NAME_KEY) || state.lastUpdatedBy || "";
+      if (gasInput) gasInput.value = settings.gasEndpointUrl || "";
+      if (syncSelect) syncSelect.value = String(Boolean(settings.syncEnabled));
+      if (intervalInput) intervalInput.value = Number(settings.autoLoadIntervalSec || 60);
+      if (document.getElementById("lastSyncAtText")) document.getElementById("lastSyncAtText").textContent = settings.lastSyncAt || "未同期";
+      if (document.getElementById("lastUpdatedByText")) document.getElementById("lastUpdatedByText").textContent = state.lastUpdatedBy || "未設定";
+      if (document.getElementById("lastUpdatedAtText")) document.getElementById("lastUpdatedAtText").textContent = formatDateTime(state.lastUpdatedAt);
+      setSyncStatus(settings.syncStatus || (settings.gasEndpointUrl ? "共有設定待機中" : "共有URLが未設定です"), settings.syncStatusType || "warn", { persist: false });
+      startAutoSync();
+    }
+
+    function setShareMode(mode) {
+      state.shareSettings.mode = mode;
+      if (mode !== "gas") state.shareSettings.syncEnabled = false;
+      state.shareSettings.syncStatus = modeDescription(mode);
+      state.shareSettings.syncStatusType = mode === "local" ? "warn" : "ok";
+      saveShareSettings();
+    }
+
+    function updateShareUserName(value) {
+      localStorage.setItem(USER_NAME_KEY, value.trim());
+      state.lastUpdatedBy = value.trim() || "未設定";
+      save({ sync: false });
+    }
+
+    function updateGasEndpoint(value) {
+      state.shareSettings.gasEndpointUrl = value.trim();
+      saveShareSettings();
+    }
+
+    function updateSyncEnabled(value) {
+      state.shareSettings.syncEnabled = value === "true";
+      state.shareSettings.mode = state.shareSettings.syncEnabled ? "gas" : state.shareSettings.mode;
+      saveShareSettings();
+      startAutoSync();
+    }
+
+    function updateAutoLoadInterval(value) {
+      const seconds = Math.max(15, Number(value) || 60);
+      state.shareSettings.autoLoadIntervalSec = seconds;
+      saveShareSettings();
+      startAutoSync();
+    }
+
+    function setSyncStatus(message, type = "warn", options = {}) {
+      const settings = getShareSettings();
+      settings.syncStatus = message;
+      settings.syncStatusType = type;
+      settings.syncError = type === "error" ? message : "";
+      const box = document.getElementById("syncStatusBox");
+      const gasBox = document.getElementById("gasErrorText");
+      if (box) {
+        box.textContent = type === "error" ? "同期エラー" : message;
+        box.className = "sync-status " + type;
+      }
+      if (gasBox) {
+        gasBox.textContent = message;
+        gasBox.className = "sync-status " + type;
+      }
+      if (options.persist !== false) localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function getCurrentStateForSync() {
+      state.lastUpdatedAt = new Date().toISOString();
+      state.lastUpdatedBy = getUserName();
+      const taskProgress = {};
+      state.tasks.forEach(task => {
+        const progress = {
+          status: task.status,
+          today: Boolean(task.today),
+          later: Boolean(task.later),
+          note: task.note || ""
+        };
+        if (progress.status !== "未完了" || progress.today || progress.later || progress.note) {
+          taskProgress[task.id] = progress;
+        }
+      });
+      const documentProgress = {};
+      state.documents.forEach(doc => {
+        const progress = {
+          done: Boolean(doc.done),
+          note: doc.note || ""
+        };
+        if (progress.done || progress.note) {
+          documentProgress[doc.id] = progress;
+        }
+      });
+      const contactProgress = {};
+      state.contacts.forEach(contact => {
+        const progress = {
+          status: contact.status,
+          generalNumberMemo: contact.generalNumberMemo || "",
+          webMemo: contact.webMemo || "",
+          beforeMemo: contact.beforeMemo || "",
+          resultMemo: contact.resultMemo || ""
+        };
+        if (progress.status !== "未確認" || progress.generalNumberMemo || progress.webMemo || progress.beforeMemo || progress.resultMemo) {
+          contactProgress[contact.id] = progress;
+        }
+      });
+      return {
+        version: 1,
+        lastUpdatedAt: state.lastUpdatedAt,
+        lastUpdatedBy: state.lastUpdatedBy,
+        tasks: taskProgress,
+        documents: documentProgress,
+        contacts: contactProgress
+      };
+    }
+
+    function compareUpdatedAt(a, b) {
+      const left = a ? new Date(a).getTime() : 0;
+      const right = b ? new Date(b).getTime() : 0;
+      return left - right;
+    }
+
+    function isProgressOnlyState(sharedState) {
+      return sharedState && sharedState.version === 1 && sharedState.tasks && !Array.isArray(sharedState.tasks);
+    }
+
+    function mergeProgressState(sharedState) {
+      const taskProgress = sharedState.tasks || {};
+      state.tasks.forEach(task => {
+        const update = taskProgress[task.id];
+        if (!update) return;
+        if (typeof update.status === "string") task.status = update.status;
+        task.today = Boolean(update.today);
+        task.later = Boolean(update.later);
+        if (typeof update.note === "string") task.note = update.note;
+      });
+      const documentProgress = sharedState.documents || {};
+      state.documents.forEach(doc => {
+        const update = documentProgress[doc.id];
+        if (!update) return;
+        doc.done = Boolean(update.done);
+        if (typeof update.note === "string") doc.note = update.note;
+      });
+      const contactProgress = sharedState.contacts || {};
+      state.contacts.forEach(contact => {
+        const update = contactProgress[contact.id];
+        if (!update) return;
+        if (typeof update.status === "string") contact.status = update.status;
+        ["generalNumberMemo", "webMemo", "beforeMemo", "resultMemo"].forEach(key => {
+          if (typeof update[key] === "string") contact[key] = update[key];
+        });
+      });
+      state.lastUpdatedAt = sharedState.lastUpdatedAt || state.lastUpdatedAt;
+      state.lastUpdatedBy = sharedState.lastUpdatedBy || state.lastUpdatedBy;
+    }
+
+    function applySharedState(sharedState, options = {}) {
+      if (!sharedState) throw new Error("共有データの形式が正しくありません");
+      const incoming = isProgressOnlyState(sharedState) ? sharedState : normalizeState(sharedState);
+      const localIsNewer = compareUpdatedAt(state.lastUpdatedAt, incoming.lastUpdatedAt) > 0;
+      const sharedIsNewer = compareUpdatedAt(incoming.lastUpdatedAt, state.lastUpdatedAt) > 0;
+      const differentUser = incoming.lastUpdatedBy && state.lastUpdatedBy && incoming.lastUpdatedBy !== state.lastUpdatedBy;
+      if (!options.force) {
+        if (sharedIsNewer) {
+          if (differentUser) alert("別の人が更新した可能性があります。共有データを読み込む前に、現在のデータを書き出してバックアップすることをおすすめします。");
+          const message = options.auto ? "共有側に新しいデータがあります。読み込みますか？" : "共有データの方が新しいです。読み込みますか？";
+          if (!confirm(message)) return false;
+        }
+        if (localIsNewer) {
+          if (confirm("この端末のデータの方が新しいです。共有先へ保存しますか？")) {
+            saveToSharedSheet();
+          }
+          return false;
+        }
+      }
+      if (isProgressOnlyState(sharedState)) {
+        mergeProgressState(sharedState);
+      } else {
+        const currentSettings = getShareSettings();
+        state = normalizeState({ ...incoming, shareSettings: { ...currentSettings, ...(incoming.shareSettings || {}) } });
+      }
+      save({ sync: false, touch: false });
+      render();
+      return true;
+    }
+
+    function jsonpRequest(url, params = {}) {
+      return new Promise((resolve, reject) => {
+        if (!url) {
+          reject(new Error("共有URLが未設定です"));
+          return;
+        }
+        const callbackName = "returnJapanJsonp_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+        const script = document.createElement("script");
+        const timeoutMs = 20000;
+        let settled = false;
+        const cleanup = () => {
+          delete window[callbackName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+        };
+        const timer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          reject(new Error("接続に失敗しました。GAS URL、デプロイ設定、アクセス権限を確認してください。"));
+        }, timeoutMs);
+        window[callbackName] = response => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          cleanup();
+          if (!response || response.ok === false) {
+            reject(new Error(response?.error || "共有先でエラーが発生しました"));
+            return;
+          }
+          resolve(response);
+        };
+        const query = new URLSearchParams({ ...params, callback: callbackName });
+        script.src = url + (url.includes("?") ? "&" : "?") + query.toString();
+        script.onerror = () => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          cleanup();
+          reject(new Error("接続に失敗しました。GAS URL、デプロイ設定、アクセス権限を確認してください。"));
+        };
+        document.head.appendChild(script);
+      });
+    }
+
+    async function requestGas(mode, data = {}) {
+      const settings = getShareSettings();
+      if (!settings.gasEndpointUrl) {
+        setSyncStatus("共有URLが未設定です", "warn");
+        throw new Error("共有URLが未設定です");
+      }
+      return jsonpRequest(settings.gasEndpointUrl, { mode, ...data });
+    }
+
+    function estimateJsonpUrlLength(mode, params = {}) {
+      const settings = getShareSettings();
+      const query = new URLSearchParams({ mode, ...params, callback: "returnJapanJsonp_debug" });
+      return (settings.gasEndpointUrl || "").length + 1 + query.toString().length;
+    }
+
+    async function saveProgressByJsonp(data) {
+      const payload = JSON.stringify(data);
+      const urlLength = estimateJsonpUrlLength("save", { payload });
+      console.log("payload文字数", payload.length);
+      console.log("保存URL長", urlLength);
+      try {
+        const result = await requestGas("save", { payload });
+        console.log("GASレスポンス", result);
+        console.log("共有保存成功", true);
+        return result;
+      } catch (e) {
+        console.error("共有保存失敗", e);
+        console.error("エラー内容", e.message || e);
+        console.error("GASから返ったerror", e.message || e);
+        throw new Error("共有保存に失敗しました。payloadが長すぎる可能性があります。");
+      }
+    }
+
+    async function testGasConnection() {
+      try {
+        setSyncStatus("接続テスト中...", "warn");
+        const result = await requestGas("test");
+        state.shareSettings.lastSyncAt = result.updatedAt || new Date().toLocaleString("ja-JP");
+        setSyncStatus("接続できました", "ok");
+        saveShareSettings();
+      } catch (e) {
+        setSyncStatus(e.message || "接続テストに失敗しました", "error");
+      }
+    }
+
+    async function loadFromSharedSheet(options = {}) {
+      try {
+        if (isEditingText()) {
+          setSyncStatus("入力中のため共有読み込みを保留しました", "warn");
+          return;
+        }
+        setSyncStatus("共有データを読み込み中...", "warn");
+        const result = await requestGas("load");
+        if (result.data) {
+          const incoming = { ...result.data, lastUpdatedAt: result.data.lastUpdatedAt || result.updatedAt, lastUpdatedBy: result.data.lastUpdatedBy || result.updatedBy };
+          applySharedState(incoming, options);
+        }
+        state.shareSettings.lastSyncAt = result.updatedAt || new Date().toLocaleString("ja-JP");
+        setSyncStatus("共有データを読み込みました", "ok");
+        saveShareSettings();
+      } catch (e) {
+        setSyncStatus(e.message || "共有データの読み込みに失敗しました", "error");
+      }
+    }
+
+    async function saveToSharedSheet(options = {}) {
+      try {
+        const payload = getCurrentStateForSync();
+        if (!options.silent) setSyncStatus("共有データを保存中...", "warn");
+        const result = await saveProgressByJsonp(payload);
+        state.shareSettings.lastSyncAt = result.updatedAt || new Date().toLocaleString("ja-JP");
+        setSyncStatus("共有データを保存しました", "ok");
+        saveShareSettings();
+      } catch (e) {
+        setSyncStatus(options.silent ? "共有保存に失敗しました。ローカルには保存済みです" : (e.message || "共有保存に失敗しました。payloadが長すぎる可能性があります。"), "error");
+        return false;
+      }
+    }
+
+    function isEditingText() {
+      const el = document.activeElement;
+      if (!el) return false;
+      return ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName);
+    }
+
+    async function syncWithSharedSheet(options = {}) {
+      const settings = getShareSettings();
+      if (!settings.syncEnabled || !settings.gasEndpointUrl) return;
+      await loadFromSharedSheet({ auto: Boolean(options.auto) });
+    }
+
+    function startAutoSync() {
+      if (syncTimer) clearInterval(syncTimer);
+      const settings = getShareSettings();
+      if (!settings.syncEnabled || !settings.gasEndpointUrl) return;
+      const seconds = Math.max(15, Number(settings.autoLoadIntervalSec) || 60);
+      syncTimer = setInterval(() => syncWithSharedSheet({ auto: true }), seconds * 1000);
+    }
+
+    function taskMatches(task) {
+      const timing = document.getElementById("filterTiming").value;
+      const category = document.getElementById("filterCategory").value;
+      const priority = document.getElementById("filterPriority").value;
+      const status = document.getElementById("filterStatus").value;
+      const q = document.getElementById("searchText").value.trim().toLowerCase();
+      const hay = [task.title, task.category, task.timing, task.priority, task.status, task.note, task.caution, task.documents.join(" "), task.related.join(" ")].join(" ").toLowerCase();
+      return (!timing || task.timing === timing) && (!category || task.category === category) && (!priority || task.priority === priority) && (!status || task.status === status) && (!q || hay.includes(q));
+    }
+
+    function render() {
+      save({ sync: false, touch: false });
+      renderHeader();
+      renderShareSettings();
+      renderQuickChecklist();
+      renderDashboard();
+      renderTasks();
+      renderCity();
+      renderContacts();
+      renderDocuments();
+    }
+
+    function renderHeader() {
+      const total = state.tasks.length;
+      const done = state.tasks.filter(t => t.status === "完了").length;
+      const open = total - done;
+      const sOpen = state.tasks.filter(t => t.priority === "S" && t.status !== "完了").length;
+      const confirm = state.tasks.filter(t => t.status === "要確認").length;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById("progressBar").style.width = pct + "%";
+      document.getElementById("headerStats").innerHTML = [
+        ["全体進捗", pct + "%"], ["完了数 / 全タスク数", `${done} / ${total}`], ["未完了数", open], ["Sランク未完了数", sOpen], ["要確認数", confirm], ["今日やる", state.tasks.filter(t => t.today && t.status !== "完了").length]
+      ].map(([label, value]) => `<div class="stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join("");
+    }
+
+
+    function getQuickChecklistTasks() {
+      return QUICK_CHECK_TITLES.map(title => state.tasks.find(task => task.title === title)).filter(Boolean);
+    }
+
+    function renderQuickProgress(tasks) {
+      const total = tasks.length;
+      const done = tasks.filter(t => t.status === "完了").length;
+      const open = total - done;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById("quickProgressText").innerHTML = `<strong>重要チェックリスト進捗：${done} / ${total} 完了、未完了 ${open}、完了率 ${pct}%</strong><span>${quickFilterLabel()}</span>`;
+      document.getElementById("quickProgressBar").style.width = pct + "%";
+    }
+
+    function quickFilterLabel() {
+      return { all: "全部表示", open: "未完了だけ", today: "今日やる", city: "市役所", phone: "電話必要" }[quickFilterMode] || "全部表示";
+    }
+
+    function renderQuickChecklist() {
+      const allTasks = getQuickChecklistTasks();
+      renderQuickProgress(allTasks);
+      document.querySelectorAll("#quickFilterButtons button").forEach(button => button.classList.toggle("active", button.dataset.mode === quickFilterMode));
+      const cityCategories = ["住所・市役所", "マイナンバー", "健康保険", "年金"];
+      const shownTasks = allTasks.filter(task => {
+        if (quickFilterMode === "open") return task.status !== "完了";
+        if (quickFilterMode === "today") return task.today;
+        if (quickFilterMode === "city") return cityCategories.includes(task.category);
+        if (quickFilterMode === "phone") return task.phoneRequired;
+        return true;
+      });
+      document.getElementById("quickChecklist").innerHTML = shownTasks.map(task => {
+        const done = task.status === "完了";
+        return `<label class="quick-check-item ${done ? "done" : ""}">
+          <input type="checkbox" ${done ? "checked" : ""} onchange="toggleQuickDone('${task.id}')" aria-label="${esc(task.title)}を完了">
+          <span class="quick-check-main ${task.priority === "S" ? "s" : ""}">${esc(task.title)}</span>
+          <span class="quick-check-meta">
+            <span class="chip">${esc(task.timing)}</span>
+            <span class="chip ${task.priority === "S" ? "s" : ""}">優先度 ${esc(task.priority)}</span>
+            <button class="small quick-today ${task.today ? "active" : ""}" type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleQuickToday('${task.id}')">今日</button>
+          </span>
+          <span class="quick-check-complete">${done ? "✓ 完了" : ""}</span>
+        </label>`;
+      }).join("") || `<div class="empty">該当する重要チェック項目はありません。</div>`;
+    }
+
+    function toggleQuickDone(taskId) {
+      const task = findTask(taskId);
+      if (!task) return;
+      task.status = task.status === "完了" ? "未完了" : "完了";
+      save({ sync: true });
+      render();
+    }
+
+    function toggleQuickToday(taskId) {
+      const task = findTask(taskId);
+      if (!task) return;
+      task.today = !task.today;
+      save({ sync: true });
+      render();
+    }
+
+    function setQuickFilter(mode) {
+      quickFilterMode = mode;
+      renderQuickChecklist();
+    }
+
+    function renderDashboard() {
+      const open = state.tasks.filter(t => t.status !== "完了");
+      const count = pred => open.filter(pred).length;
+      const cards = [
+        ["全体進捗", Math.round((state.tasks.length - open.length) / Math.max(1, state.tasks.length) * 100) + "%", "完了率"],
+        ["今日やるべきこと", count(t => t.today), "今日フラグあり"],
+        ["14日以内にやること", count(t => ["帰国当日〜3日以内", "14日以内", "1〜2週間以内"].includes(t.timing)), "初動タスク"],
+        ["電話が必要な手続き", count(t => t.phoneRequired), "発信・問い合わせ"],
+        ["市役所系の未完了", count(t => t.category === "住所・市役所" || CITY_ITEMS.some(i => t.title.includes(i.replace("住所変更", "")))), "窓口中心"],
+        ["証券・保険の未完了", count(t => ["証券", "保険"].includes(t.category)), "資産・保障"],
+        ["子育て・将来設計の未完了", count(t => ["子育て", "資格・学習"].includes(t.category) || t.title.includes("将来")), "家族と学習"],
+        ["あとで確認", count(t => t.later), "保留中"]
+      ];
+      document.getElementById("dashboard").innerHTML = cards.map(c => `<div class="dash-card"><span>${esc(c[0])}</span><strong>${esc(c[1])}</strong><span>${esc(c[2])}</span></div>`).join("");
+      renderSimpleSummary("timingSummary", TIMINGS, t => t.timing);
+      renderSimpleSummary("categorySummary", CATEGORIES, t => t.category);
+      document.getElementById("sOpenList").innerHTML = open.filter(t => t.priority === "S").slice(0, 12).map(t => `<li>${esc(t.title)}</li>`).join("") || "<li>なし</li>";
+    }
+
+    function renderSimpleSummary(id, keys, getter) {
+      const html = keys.map(key => {
+        const total = state.tasks.filter(t => getter(t) === key).length;
+        const done = state.tasks.filter(t => getter(t) === key && t.status === "完了").length;
+        return `<div>${esc(key)}：${done}/${total}</div>`;
+      }).join("");
+      document.getElementById(id).innerHTML = html;
+    }
+
+    function renderTasks() {
+      const tasks = state.tasks.filter(taskMatches);
+      document.getElementById("taskCountLine").textContent = `表示中：${tasks.length}件`;
+      document.getElementById("taskList").innerHTML = tasks.map(taskCard).join("") || `<div class="empty">該当するタスクはありません。</div>`;
+    }
+
+    function taskCard(t) {
+      const done = t.status === "完了";
+      const chips = [
+        `<span class="chip">${esc(t.category)}</span>`,
+        `<span class="chip">${esc(t.timing)}</span>`,
+        `<span class="chip ${t.priority === "S" ? "s" : ""}">優先度 ${esc(t.priority)}</span>`,
+        `<span class="chip ${t.status === "要確認" ? "check" : done ? "ok" : ""}">${esc(t.status)}</span>`,
+        t.phoneRequired ? `<span class="chip phone">電話必要</span>` : "",
+        (t.caution.includes("0570") || t.title.includes("0570")) ? `<span class="chip warn">0570注意</span>` : "",
+        t.today ? `<span class="chip ok">今日やる</span>` : "",
+        t.later ? `<span class="chip check">あとで確認</span>` : ""
+      ].join("");
+      return `<article class="task-card ${done ? "done" : ""}">
+        <div class="task-top">
+          <input type="checkbox" ${done ? "checked" : ""} onchange="toggleDone('${t.id}')" aria-label="完了">
+          <div>
+            <div class="task-title ${t.priority === "S" ? "s" : ""}">${esc(t.title)}</div>
+            <div class="chips">${chips}</div>
+          </div>
+          <div class="actions">
+            <button class="small" onclick="markConfirm('${t.id}')">要確認</button>
+            <button class="small" onclick="toggleToday('${t.id}')">今日</button>
+            <button class="small" onclick="toggleLater('${t.id}')">後で</button>
+            <button class="small" onclick="editTask('${t.id}')">編集</button>
+            <button class="small danger" onclick="deleteTask('${t.id}')">削除</button>
+          </div>
+        </div>
+        <details>
+          <summary>詳細</summary>
+          <div class="detail-grid">
+            <div class="detail-box"><b>必要書類</b>${esc(t.documents.join("、") || "なし")}</div>
+            <div class="detail-box"><b>関連手続き</b>${esc(t.related.join("、") || "なし")}</div>
+            <div class="detail-box"><b>注意点</b>${esc(t.caution || "なし")}</div>
+            <label class="detail-box"><b>メモ</b><textarea oninput="updateTaskNote('${t.id}', this.value)">${esc(t.note || "")}</textarea></label>
+          </div>
+        </details>
+      </article>`;
+    }
+
+    function findTask(id) { return state.tasks.find(t => t.id === id); }
+    function toggleDone(id) {
+      const task = findTask(id);
+      task.status = task.status === "完了" ? "未完了" : "完了";
+      save({ sync: true });
+      render();
+    }
+    function markConfirm(id) { findTask(id).status = "要確認"; save({ sync: true }); render(); }
+    function toggleToday(id) { const t = findTask(id); t.today = !t.today; save({ sync: true }); render(); }
+    function toggleLater(id) { const t = findTask(id); t.later = !t.later; save({ sync: true }); render(); }
+    function updateTaskNote(id, note) { findTask(id).note = note; save(); renderHeader(); renderDashboard(); }
+    function deleteTask(id) {
+      if (!confirm("このタスクを削除しますか？")) return;
+      state.tasks = state.tasks.filter(t => t.id !== id);
+      save({ sync: true });
+      render();
+    }
+
+    function showTaskForm(task) {
+      document.getElementById("taskFormSection").classList.remove("hidden");
+      document.getElementById("formTitle").textContent = task ? "タスク編集" : "タスク追加";
+      document.getElementById("editId").value = task?.id || "";
+      document.getElementById("taskTitle").value = task?.title || "";
+      document.getElementById("taskCategory").value = task?.category || "住所・市役所";
+      document.getElementById("taskTiming").value = task?.timing || "14日以内";
+      document.getElementById("taskPriority").value = task?.priority || "B";
+      document.getElementById("taskStatus").value = task?.status || "未完了";
+      document.getElementById("taskPhone").value = String(task?.phoneRequired || false);
+      document.getElementById("taskDocuments").value = task?.documents?.join(", ") || "";
+      document.getElementById("taskRelated").value = task?.related?.join(", ") || "";
+      document.getElementById("taskCaution").value = task?.caution || "";
+      document.getElementById("taskNote").value = task?.note || "";
+      document.getElementById("taskTitle").focus();
+    }
+    function hideTaskForm() { document.getElementById("taskFormSection").classList.add("hidden"); }
+    function editTask(id) { showTaskForm(findTask(id)); }
+    function saveTaskFromForm(event) {
+      event.preventDefault();
+      const id = document.getElementById("editId").value || "task-custom-" + Date.now();
+      const existing = findTask(id);
+      const task = existing || { id, today: false, later: false };
+      Object.assign(task, {
+        title: document.getElementById("taskTitle").value.trim(),
+        category: document.getElementById("taskCategory").value,
+        timing: document.getElementById("taskTiming").value,
+        priority: document.getElementById("taskPriority").value,
+        status: document.getElementById("taskStatus").value,
+        phoneRequired: document.getElementById("taskPhone").value === "true",
+        documents: splitList(document.getElementById("taskDocuments").value),
+        related: splitList(document.getElementById("taskRelated").value),
+        caution: document.getElementById("taskCaution").value,
+        note: document.getElementById("taskNote").value
+      });
+      if (!existing) state.tasks.unshift(task);
+      save({ sync: true });
+      hideTaskForm();
+      render();
+    }
+
+    function renderCity() {
+      const cityTasks = state.tasks.filter(t => t.status !== "完了" && (t.category === "住所・市役所" || t.category === "マイナンバー" || t.category === "健康保険" || t.category === "年金" || CITY_ITEMS.some(i => t.title.includes(i.replace("住所変更", "")))));
+      document.getElementById("cityTasks").innerHTML = cityTasks.slice(0, 30).map(t => `<li>${esc(t.title)} <small>(${esc(t.timing)})</small></li>`).join("") || "<li>なし</li>";
+      document.getElementById("cityDocuments").innerHTML = CITY_DOCS.map(d => `<li>${esc(d)}</li>`).join("");
+      document.getElementById("cityChecklist").innerHTML = CITY_ITEMS.map(d => `<li>${esc(d)}</li>`).join("");
+    }
+
+    function renderDocuments() {
+      document.getElementById("documents").innerHTML = state.documents.map(doc => `<label class="check-row">
+        <input type="checkbox" ${doc.done ? "checked" : ""} onchange="toggleDocument('${doc.id}')">
+        <span><b>${esc(doc.name)}</b><input value="${esc(doc.note)}" placeholder="メモ" oninput="updateDocument('${doc.id}', this.value)"></span>
+      </label>`).join("");
+    }
+    function toggleDocument(id) { const doc = state.documents.find(d => d.id === id); doc.done = !doc.done; save({ sync: true }); render(); }
+    function updateDocument(id, note) { state.documents.find(d => d.id === id).note = note; save(); }
+
+    function renderContacts() {
+      document.getElementById("contacts").innerHTML = state.contacts.map(c => `<div class="contact-row">
+        <div class="contact-head"><span>${esc(c.name)}</span><span class="chip ${c.need === "高" ? "phone" : ""}">電話必要度：${esc(c.need)}</span></div>
+        <div class="chips">${c.naviWarning ? '<span class="chip warn">0570注意</span>' : ""}${c.tollFreeWarning ? '<span class="chip warn">0120・0800注意</span>' : ""}</div>
+        <label>状態<select onchange="updateContact('${c.id}', 'status', this.value)">${["未確認", "確認中", "完了"].map(v => `<option ${c.status === v ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+        <label>一般番号を探すメモ<input value="${esc(c.generalNumberMemo)}" oninput="updateContact('${c.id}', 'generalNumberMemo', this.value)"></label>
+        <label>Web問い合わせ可否メモ<input value="${esc(c.webMemo)}" oninput="updateContact('${c.id}', 'webMemo', this.value)"></label>
+        <label>問い合わせ前メモ<textarea oninput="updateContact('${c.id}', 'beforeMemo', this.value)">${esc(c.beforeMemo)}</textarea></label>
+        <label>問い合わせ結果メモ<textarea oninput="updateContact('${c.id}', 'resultMemo', this.value)">${esc(c.resultMemo)}</textarea></label>
+      </div>`).join("");
+    }
+    function updateContact(id, key, value) { state.contacts.find(c => c.id === id)[key] = value; save({ sync: true }); }
+
+    function clearFilters() {
+      ["filterTiming", "filterCategory", "filterPriority", "filterStatus", "searchText"].forEach(id => document.getElementById(id).value = "");
+      render();
+    }
+    function exportJson() {
+      save({ sync: false });
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "return-japan-checklist-state.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    function importJson(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          if (!Array.isArray(imported.tasks)) throw new Error("tasksがありません");
+          state = normalizeState({
+            ...imported,
+            tasks: imported.tasks,
+            documents: imported.documents || buildInitialState().documents,
+            contacts: imported.contacts || buildInitialState().contacts,
+            shareSettings: { ...getShareSettings(), ...(imported.shareSettings || {}) }
+          });
+          render();
+          alert("インポートしました。");
+        } catch (e) {
+          alert("JSONを読み込めませんでした。");
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+    function restoreInitial() {
+      if (!confirm("初期データに戻しますか？現在の編集内容は上書きされます。")) return;
+      state = buildInitialState();
+      save({ sync: true });
+      render();
+    }
+    function resetAll() {
+      if (!confirm("全データを削除しますか？")) return;
+      if (!confirm("本当に削除しますか？この操作は元に戻せません。")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = normalizeState({ tasks: [], documents: buildInitialState().documents, contacts: buildInitialState().contacts, shareSettings: getShareSettings() });
+      render();
+    }
+
+    initControls();
+    render();
+    startAutoSync();
+    if (getShareSettings().syncEnabled && getShareSettings().gasEndpointUrl) {
+      setSyncStatus("共有読み込み待機中。必要なら上部のボタンで読み込めます", "warn");
+    }
+  </script>
+</body>
+</html>
