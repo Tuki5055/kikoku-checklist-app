@@ -314,6 +314,9 @@
     }
     .map-level { font-size: clamp(22px, 4vw, 34px); font-weight: 900; line-height: 1.2; margin: 6px 0; }
     .map-message { color: var(--muted); font-weight: 800; margin-top: 8px; }
+    .next-mission { margin-top: 12px; border: 1px solid #d9e8d8; border-radius: 14px; background: #f7fbf4; padding: 10px 12px; }
+    .next-mission b { display: block; color: var(--muted); font-size: 12px; margin-bottom: 3px; }
+    .next-mission span { font-weight: 900; }
     .map-metrics {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -328,6 +331,8 @@
     .map-metric strong { display: block; font-size: 22px; line-height: 1.1; }
     .map-metric span { color: var(--muted); font-size: 12px; font-weight: 800; }
     .detail-mission-panel > summary { background: linear-gradient(90deg, #ffffff 0%, #f7fbf4 100%); }
+    .mission-search { margin-bottom: 10px; max-width: 520px; }
+    .compact-admin .edit-area { margin-bottom: 12px; padding: 14px; box-shadow: none; }
     .mission-view-bar {
       display: flex;
       flex-wrap: wrap;
@@ -505,31 +510,11 @@
       </details>
     </section>
 
-    <section class="edit-area hidden" id="taskFormSection">
-      <h2 id="formTitle">ミッション追加</h2>
-      <form id="taskForm" class="form-grid">
-        <input type="hidden" id="editId">
-        <label>タスク名<input id="taskTitle" required></label>
-        <label>分野<select id="taskCategory"></select></label>
-        <label>期限<select id="taskTiming"></select></label>
-        <label>優先度<select id="taskPriority"></select></label>
-        <label>状態<select id="taskStatus"></select></label>
-        <label>電話必要<select id="taskPhone"><option value="false">不要</option><option value="true">必要</option></select></label>
-        <label class="wide">必要書類<input id="taskDocuments" placeholder="カンマ区切り"></label>
-        <label class="wide">関連手続き<input id="taskRelated" placeholder="カンマ区切り"></label>
-        <label class="wide">注意点<textarea id="taskCaution"></textarea></label>
-        <label class="wide">メモ<textarea id="taskNote"></textarea></label>
-        <div class="toolbar wide">
-          <button class="primary" type="submit">保存</button>
-          <button type="button" onclick="hideTaskForm()">閉じる</button>
-        </div>
-      </form>
-    </section>
-
     <details class="utility-panel detail-mission-panel" open>
       <summary><h2>詳細ミッション一覧</h2></summary>
       <div class="panel-body">
         <p class="section-help">重要な手続きを種類ごとに確認できます。迷ったら「未クリア」から進めてください。</p>
+        <label class="mission-search">ミッション検索<input id="detailMissionSearch" type="search" placeholder="NISA、楽天証券、野村證券など" oninput="renderTasks()"></label>
         <div class="mission-view-bar" id="detailMissionButtons">
           <button type="button" data-mode="open" onclick="setDetailMissionMode('open')">未クリア</button>
           <button type="button" data-mode="s" onclick="setDetailMissionMode('s')">最重要</button>
@@ -590,9 +575,30 @@
           </div>
         </details>
 
-        <details class="sub-panel">
+        <details class="sub-panel" id="backupEditPanel">
           <summary><h3>バックアップ・編集</h3><span>必要なときだけ開く</span></summary>
           <div class="sub-panel-body">
+    <section class="edit-area hidden" id="taskFormSection">
+      <h2 id="formTitle">ミッション追加</h2>
+      <form id="taskForm" class="form-grid">
+        <input type="hidden" id="editId">
+        <label>タスク名<input id="taskTitle" required></label>
+        <label>分野<select id="taskCategory"></select></label>
+        <label>期限<select id="taskTiming"></select></label>
+        <label>優先度<select id="taskPriority"></select></label>
+        <label>状態<select id="taskStatus"></select></label>
+        <label>電話必要<select id="taskPhone"><option value="false">不要</option><option value="true">必要</option></select></label>
+        <label class="wide">必要書類<input id="taskDocuments" placeholder="カンマ区切り"></label>
+        <label class="wide">関連手続き<input id="taskRelated" placeholder="カンマ区切り"></label>
+        <label class="wide">注意点<textarea id="taskCaution"></textarea></label>
+        <label class="wide">メモ<textarea id="taskNote"></textarea></label>
+        <div class="toolbar wide">
+          <button class="primary" type="submit">保存</button>
+          <button type="button" onclick="hideTaskForm()">閉じる</button>
+        </div>
+      </form>
+    </section>
+
             <div class="toolbar compact-toolbar">
               <button onclick="showTaskForm()">ミッションを追加</button>
               <button onclick="exportJson()">バックアップを書き出す</button>
@@ -630,7 +636,7 @@
     const TASK_SEEDS = [
       ["帰国当日〜3日以内", ["最初に住む場所へ到着", "郵便物を受け取れる住所を確認", "住民登録できる住所か確認", "家族・会社・重要連絡先へ帰国報告", "荷物の到着予定を確認", "別送品の通関・配送状況を確認", "日本で使うスマホ回線を開通", "SMS認証できるか確認", "通話発信できるか確認", "0120・0800・0570・一般番号への発信可否を確認", "Wi-Fi環境を確保", "日本円の現金を確保", "日本のクレジットカードが使えるか確認", "銀行キャッシュカードが使えるか確認", "PayPay、楽天ペイ、Suica等を再設定", "海外カードの利用停止・継続を確認"]],
       ["14日以内", ["転入届を提出", "住民票を登録", "世帯主・世帯構成を確認", "住民票を数通取得", "住民票記載事項証明書が必要か確認", "マイナンバーカードの住所変更", "マイナンバーカードの継続利用手続き", "電子証明書の有効性を確認", "署名用電子証明書のパスワードを確認", "利用者証明用電子証明書のパスワードを確認", "マイナポータルにログインできるか確認", "カード失効時は再申請", "会社の健康保険に入るか確認", "空白期間がある場合、国民健康保険の加入を確認", "保険証または資格確認書の受取方法を確認", "マイナ保険証の利用登録を確認", "扶養に入れる家族がいる場合、会社へ確認", "厚生年金加入日を確認", "空白期間がある場合、国民年金の手続きを確認", "基礎年金番号を確認", "配偶者の第3号被保険者該当性を確認", "海外任意加入期間がある場合、年金記録を確認", "実印を用意", "印鑑登録", "印鑑証明書を取得", "戸籍謄本が必要か確認", "戸籍附票が必要か確認", "課税証明書・非課税証明書の発行可否を確認", "納税証明書の発行可否を確認", "児童手当の対象有無を確認", "子ども医療費助成を確認", "保育園申請時期を確認", "妊娠中の場合、母子健康手帳・妊婦健診補助券を確認", "予防接種履歴を自治体に確認", "小児科・産婦人科を探す", "ごみ分別ルールを確認", "指定ごみ袋を購入", "粗大ごみの出し方を確認", "ハザードマップを確認", "避難所を確認", "自治会・町内会の有無を確認"]],
-      ["1〜2週間以内", ["日本の銀行口座の住所変更", "電話番号変更", "メールアドレス変更", "マイナンバー登録状況を確認", "キャッシュカードの有効性を確認", "インターネットバンキングにログイン", "ワンタイムパスワード設定を確認", "海外送金履歴・残高証明を保管", "給与振込口座を決める", "野村證券の登録住所・居住者区分を確認", "楽天証券の口座状態を確認", "楽天証券の住所・電話番号・マイナンバーを更新", "特定口座の有無を確認", "NISA口座の状態を確認", "NISA口座を開設", "野村證券から楽天証券への移管可否を確認", "移管対象が特定口座か一般口座か確認", "NISA商品はそのまま移管できない点を確認", "移管手数料を確認", "必要書類を請求", "移管完了後、取得単価・数量を確認", "生命保険の住所変更", "医療保険の住所変更", "保険料支払口座を確認", "保障内容を一覧化", "不要な特約を確認", "解約・減額・払済の要否を検討", "妊娠・出産関連の給付条件を確認", "火災保険の加入要否を確認", "自動車保険の候補を比較"]],
+      ["1〜2週間以内", ["日本の銀行口座の住所変更", "電話番号変更", "メールアドレス変更", "マイナンバー登録状況を確認", "キャッシュカードの有効性を確認", "インターネットバンキングにログイン", "ワンタイムパスワード設定を確認", "海外送金履歴・残高証明を保管", "給与振込口座を決める", "野村證券の登録住所・居住者区分を確認", "楽天証券の口座状態を確認", "楽天証券の住所・電話番号・マイナンバーを更新", "特定口座の有無を確認", "NISA口座の状態を確認", "NISA口座を開設", "楽天証券で新NISA口座の有無を確認する", "新NISA口座を楽天証券で開設・金融機関変更する", "現在のNISA金融機関が野村證券か確認する", "NISA金融機関変更に必要な書類を取り寄せる", "新NISAのつみたて投資枠を設定する", "新NISAの成長投資枠を使うか決める", "旧NISA・特定口座・新NISAの商品を整理する", "野村證券から楽天証券への移管可否を確認", "移管対象が特定口座か一般口座か確認", "NISA商品はそのまま移管できない点を確認", "移管手数料を確認", "必要書類を請求", "移管完了後、取得単価・数量を確認", "生命保険の住所変更", "医療保険の住所変更", "保険料支払口座を確認", "保障内容を一覧化", "不要な特約を確認", "解約・減額・払済の要否を検討", "妊娠・出産関連の給付条件を確認", "火災保険の加入要否を確認", "自動車保険の候補を比較"]],
       ["1か月以内", ["仮住まいの期限を確認", "本住居の候補エリアを決める", "家賃上限を決める", "駐車場の有無を確認", "通勤時間を確認", "保育園・病院・スーパー・駅への距離を確認", "ハザードマップを確認", "賃貸審査用の書類を準備", "住民票、収入証明、在職証明を用意", "電気・ガス・水道を契約", "インターネット回線を契約", "車が必要な地域か判断", "すぐ買うか、レンタカー・カーシェアでつなぐか決める", "駐車場を確保", "車庫証明の必要書類を確認", "中古車・新車の予算を決める", "任意保険の見積を取る", "ドライブレコーダーを検討", "雪道地域ならスタッドレスタイヤを検討", "チャイルドシートが必要か確認", "運転免許証の住所変更", "本人確認書類の住所を統一", "銀行・証券・保険・携帯の登録住所を一致させる"]],
       ["1〜2か月以内", ["勤務先へ帰国後住所を提出", "給与振込口座を提出", "健康保険・厚生年金の加入日を確認", "扶養申請の必要性を確認", "通勤手当・住宅手当の条件を確認", "源泉徴収票・給与明細を保管", "海外勤務期間の証明を保管", "帰国年の所得税の扱いを確認", "海外所得の有無を整理", "海外口座の残高証明を保管", "海外から日本への送金履歴を保管", "証券取引履歴を保管", "確定申告が必要か確認", "住民税の課税年度を確認", "ふるさと納税を使えるか確認", "住む自治体の子育て支援を確認", "産婦人科・小児科を探す", "保育園の入園時期と申請期限を確認", "教育費の積立方針を決める", "NISAの積立設定を再開", "生活防衛資金を確認", "車・住宅・教育費・資格費用の予算を整理"]],
       ["3〜6か月以内", ["楽天モバイル、povo、ahamo、LINEMO等を比較", "電話が減ったら通話プランを見直す", "サブ回線の必要性を判断", "固定回線とモバイル回線の費用を比較", "月間生活費を集計", "家賃・通信費・保険料を見直す", "不要なサブスクを解約", "クレジットカードを整理", "楽天経済圏を使うか判断", "投資積立額を再設定", "楽天証券で積立設定", "NISA口座の金融機関を確認", "野村證券からの移管完了を確認", "保有商品の信託報酬を確認", "高コスト商品を整理", "低コストインデックス中心に再構成", "社労士試験後の方針を決める", "中小企業診断士の学習計画を立てる", "TOEIC学習を再開", "学習アプリ・Anki・問題集を整理", "平日・休日の学習時間を固定", "寝具を購入", "デスク・椅子を購入", "家電を購入", "防災用品を揃える", "収納用品を揃える", "車用品を揃える", "冬物・雨具を揃える"]]
@@ -698,7 +704,7 @@
 
     function priorityFor(title, timing) {
       if (keyword(title, ["転入届", "住民票", "マイナンバー", "健康保険", "年金", "携帯", "スマホ", "電話番号", "銀行キャッシュカード", "バンキング", "別送品", "日本円", "SMS"])) return "S";
-      if (title.includes("NISA口座を開設")) return "A";
+      if (keyword(title, ["新NISA", "NISA口座", "NISA金融機関", "つみたて投資枠", "成長投資枠", "旧NISA"])) return "A";
       if (keyword(title, ["証券", "保険の住所変更", "免許証", "印鑑登録", "住居", "電気", "ガス", "水道", "インターネット", "税", "会社", "勤務先"])) return "A";
       if (keyword(title, ["移管", "NISA", "保険", "車", "家具", "家電", "子育て", "資格", "学習"])) return "B";
       if (timing === "3〜6か月以内") return "C";
@@ -764,6 +770,14 @@
         }
         migrations.addNisaAccountOpeningV1 = true;
       }
+      if (!migrations.addNewNisaTasksV1) {
+        ["楽天証券で新NISA口座の有無を確認する", "新NISA口座を楽天証券で開設・金融機関変更する", "現在のNISA金融機関が野村證券か確認する", "NISA金融機関変更に必要な書類を取り寄せる", "新NISAのつみたて投資枠を設定する", "新NISAの成長投資枠を使うか決める", "旧NISA・特定口座・新NISAの商品を整理する"].forEach(title => {
+          if (!nextState.tasks.some(task => task.title === title)) {
+            nextState.tasks.push(buildTask(title, "1〜2週間以内", nextTaskId(nextState.tasks)));
+          }
+        });
+        migrations.addNewNisaTasksV1 = true;
+      }
       nextState.migrations = migrations;
       return nextState;
     }
@@ -824,7 +838,7 @@
       const shareSettings = { ...defaultShareSettings(), ...(initial.shareSettings || {}) };
       const nextState = {
         ...initial,
-        tasks: Array.isArray(initial.tasks) ? initial.tasks : buildInitialTasks(),
+        tasks: Array.isArray(initial.tasks) && initial.tasks.length ? initial.tasks : buildInitialTasks(),
         documents: Array.isArray(initial.documents) ? initial.documents : IMPORTANT_DOCS.map((name, i) => ({ id: "doc-" + i, name, done: false, note: "" })),
         contacts: Array.isArray(initial.contacts) ? initial.contacts : buildInitialState().contacts,
         lastUpdatedAt: initial.lastUpdatedAt || new Date().toISOString(),
@@ -865,6 +879,8 @@
       fillSelect("taskPriority", PRIORITIES, null, displayPriority);
       fillSelect("taskStatus", STATUSES, null, displayStatus);
       document.getElementById("importFile").addEventListener("change", importJson);
+      const detailSearch = document.getElementById("detailMissionSearch");
+      if (detailSearch) detailSearch.addEventListener("input", renderTasks);
       document.getElementById("taskForm").addEventListener("submit", saveTaskFromForm);
       renderShareSettings();
     }
@@ -1257,6 +1273,9 @@
     }
 
     function taskMatches(task) {
+      const search = (document.getElementById("detailMissionSearch")?.value || "").trim().toLowerCase();
+      const hay = [task.title, task.category, task.timing, task.priority, task.status, task.note, task.caution, task.documents.join(" "), task.related.join(" ")].join(" ").toLowerCase();
+      if (search && !hay.includes(search)) return false;
       if (detailMissionMode === "open") return task.status !== "完了";
       if (detailMissionMode === "s") return task.priority === "S" && task.status !== "完了";
       if (detailMissionMode === "early") return ["帰国当日〜3日以内", "14日以内", "1〜2週間以内"].includes(task.timing) && task.status !== "完了";
@@ -1306,8 +1325,29 @@
     }
 
 
+    function quickMissionScore(task) {
+      let score = 0;
+      if (task.today) score -= 1000;
+      if (task.priority === "S") score -= 400;
+      if (task.priority === "A") score -= 250;
+      if (["帰国当日〜3日以内", "14日以内"].includes(task.timing)) score -= 180;
+      if (task.timing === "1〜2週間以内") score -= 120;
+      if (["住所・市役所", "マイナンバー", "携帯・通信", "銀行", "証券"].includes(task.category)) score -= 90;
+      score += missionSortValue(task);
+      return score;
+    }
+
     function getQuickChecklistTasks() {
-      return QUICK_CHECK_TITLES.map(title => state.tasks.find(task => task.title === title)).filter(Boolean);
+      const todayTasks = state.tasks.filter(task => task.today && task.status !== "完了").sort((a, b) => quickMissionScore(a) - quickMissionScore(b));
+      if (todayTasks.length) return todayTasks;
+      return state.tasks
+        .filter(task => task.status !== "完了" && ["S", "A"].includes(task.priority))
+        .sort((a, b) => quickMissionScore(a) - quickMissionScore(b))
+        .slice(0, 5);
+    }
+
+    function getNextRecommendedTask() {
+      return getQuickChecklistTasks().find(task => task.status !== "完了") || state.tasks.filter(task => task.status !== "完了").sort((a, b) => quickMissionScore(a) - quickMissionScore(b))[0];
     }
 
     function renderQuickProgress(tasks) {
@@ -1315,7 +1355,9 @@
       const done = tasks.filter(t => t.status === "完了").length;
       const open = total - done;
       const pct = total ? Math.round(done / total * 100) : 0;
-      document.getElementById("quickProgressText").innerHTML = `<strong>今日のミッション進捗：${done} / ${total} クリア、未クリア ${open}、クリア率 ${pct}%</strong><span>日本生活 再起動レベル：${esc(restartLevelLabel(pct))} / ${esc(quickFilterLabel())}</span>`;
+      const hasToday = tasks.some(task => task.today && task.status !== "完了");
+      const sourceLabel = hasToday ? "今日指定" : "自動おすすめ";
+      document.getElementById("quickProgressText").innerHTML = `<strong>今日のミッション進捗：${done} / ${total} クリア、未クリア ${open}、クリア率 ${pct}%</strong><span>${esc(sourceLabel)} / ${esc(quickFilterLabel())}</span>`;
       document.getElementById("quickProgressBar").style.width = pct + "%";
     }
 
@@ -1376,9 +1418,11 @@
       const open = state.tasks.filter(t => t.status !== "完了");
       const count = pred => open.filter(pred).length;
       const pct = total ? Math.round(done / total * 100) : 0;
+      const nextTask = getNextRecommendedTask();
       const metrics = [
+        ["クリア済み", done],
         ["未クリア", open.length],
-        ["最重要", count(t => t.priority === "S")],
+        ["最重要の残り", count(t => t.priority === "S")],
         ["要チェック", state.tasks.filter(t => t.status === "要確認").length]
       ];
       document.getElementById("dashboard").innerHTML = `<div class="progress-map-card">
@@ -1387,6 +1431,7 @@
           <div class="map-level">${esc(restartLevelLabel(pct))}</div>
           <div class="bar" aria-label="進捗マップ"><span style="width:${pct}%"></span></div>
           <div class="map-message">${esc(restartMessage(pct))}</div>
+          <div class="next-mission"><b>次のおすすめミッション</b><span>${esc(nextTask ? nextTask.title : "すべてクリア済みです")}</span></div>
         </div>
         <div class="map-metrics">
           ${metrics.map(([label, value]) => `<div class="map-metric"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join("")}
@@ -1491,6 +1536,10 @@
     }
 
     function showTaskForm(task) {
+      const adminMenu = document.getElementById("adminMenu");
+      const backupPanel = document.getElementById("backupEditPanel");
+      if (adminMenu) adminMenu.open = true;
+      if (backupPanel) backupPanel.open = true;
       document.getElementById("taskFormSection").classList.remove("hidden");
       document.getElementById("formTitle").textContent = task ? "ミッション編集" : "ミッション追加";
       document.getElementById("editId").value = task?.id || "";
