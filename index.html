@@ -445,7 +445,6 @@
       <div class="bar quick-progress-bar" aria-label="今日のミッション進捗"><span id="quickProgressBar"></span></div>
       <div class="quick-filter-bar" id="quickFilterButtons">
         <button type="button" data-mode="open" onclick="setQuickFilter('open')">未クリアだけ</button>
-        <button type="button" data-mode="today" onclick="setQuickFilter('today')">今日のミッション</button>
         <button type="button" data-mode="city" onclick="setQuickFilter('city')">市役所</button>
         <button type="button" data-mode="phone" onclick="setQuickFilter('phone')">電話必要</button>
         <button type="button" data-mode="all" onclick="setQuickFilter('all')">全部</button>
@@ -1296,7 +1295,7 @@
     }
 
     function quickFilterLabel() {
-      return { all: "全部表示", open: "未クリアだけ", today: "今日のミッション", city: "市役所", phone: "電話必要" }[quickFilterMode] || "全部表示";
+      return { all: "全部表示", open: "未クリアだけ", city: "市役所", phone: "電話必要" }[quickFilterMode] || "全部表示";
     }
 
     function renderQuickChecklist() {
@@ -1306,7 +1305,6 @@
       const cityCategories = ["住所・市役所", "マイナンバー", "健康保険", "年金"];
       const shownTasks = allTasks.filter(task => {
         if (quickFilterMode === "open") return task.status !== "完了";
-        if (quickFilterMode === "today") return task.today;
         if (quickFilterMode === "city") return cityCategories.includes(task.category);
         if (quickFilterMode === "phone") return task.phoneRequired;
         return true;
@@ -1319,7 +1317,7 @@
           <span class="quick-check-meta">
             <span class="chip">${esc(task.timing)}</span>
             <span class="chip ${task.priority === "S" ? "s" : ""}">${esc(displayPriority(task.priority))}</span>
-            <button class="small quick-today ${task.today ? "active" : ""}" type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleQuickToday('${task.id}')">今日のミッション</button>
+            <button class="small quick-today ${task.today ? "active" : ""}" type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleQuickToday('${task.id}')">今日</button>
           </span>
           <span class="quick-check-complete">${done ? "✓ クリア" : ""}</span>
         </label>`;
