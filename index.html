@@ -506,13 +506,6 @@
     </details>
 
     <details class="utility-panel">
-      <summary><h2>電話・問い合わせ管理</h2></summary>
-      <div class="panel-body">
-        <div class="contact-grid" id="contacts"></div>
-      </div>
-    </details>
-
-    <details class="utility-panel">
       <summary><h2>重要書類リスト</h2></summary>
       <div class="panel-body">
         <div class="doc-grid" id="documents"></div>
@@ -1230,7 +1223,6 @@
       renderDashboard();
       renderTasks();
       renderCity();
-      renderContacts();
       renderDocuments();
     }
 
@@ -1475,7 +1467,9 @@
     function updateDocument(id, note) { state.documents.find(d => d.id === id).note = note; save(); }
 
     function renderContacts() {
-      document.getElementById("contacts").innerHTML = state.contacts.map(c => `<div class="contact-row">
+      const contactsEl = document.getElementById("contacts");
+      if (!contactsEl) return;
+      contactsEl.innerHTML = state.contacts.map(c => `<div class="contact-row">
         <div class="contact-head"><span>${esc(c.name)}</span><span class="chip ${c.need === "高" ? "phone" : ""}">電話必要度：${esc(c.need)}</span></div>
         <div class="chips">${c.naviWarning ? '<span class="chip warn">0570注意</span>' : ""}${c.tollFreeWarning ? '<span class="chip warn">0120・0800注意</span>' : ""}</div>
         <label>状態<select onchange="updateContact('${c.id}', 'status', this.value)">${["未確認", "確認中", "完了"].map(v => `<option value="${esc(v)}" ${c.status === v ? "selected" : ""}>${esc(displayStatus(v))}</option>`).join("")}</select></label>
