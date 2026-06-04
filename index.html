@@ -314,9 +314,6 @@
     }
     .map-level { font-size: clamp(22px, 4vw, 34px); font-weight: 900; line-height: 1.2; margin: 6px 0; }
     .map-message { color: var(--muted); font-weight: 800; margin-top: 8px; }
-    .next-mission { margin-top: 12px; border: 1px solid #d9e8d8; border-radius: 14px; background: #f7fbf4; padding: 10px 12px; }
-    .next-mission b { display: block; color: var(--muted); font-size: 12px; margin-bottom: 3px; }
-    .next-mission span { font-weight: 900; }
     .map-metrics {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1421,7 +1418,6 @@
       const open = state.tasks.filter(t => t.status !== "完了");
       const count = pred => open.filter(pred).length;
       const pct = total ? Math.round(done / total * 100) : 0;
-      const nextTask = getNextRecommendedTask();
       const metrics = [
         ["クリア済み", done],
         ["未クリア", open.length],
@@ -1434,7 +1430,6 @@
           <div class="map-level">${esc(restartLevelLabel(pct))}</div>
           <div class="bar" aria-label="進捗マップ"><span style="width:${pct}%"></span></div>
           <div class="map-message">${esc(restartMessage(pct))}</div>
-          <div class="next-mission"><b>次のおすすめミッション</b><span>${esc(nextTask ? nextTask.title : "すべてクリア済みです")}</span></div>
         </div>
         <div class="map-metrics">
           ${metrics.map(([label, value]) => `<div class="map-metric"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join("")}
