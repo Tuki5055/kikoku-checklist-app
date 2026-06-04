@@ -1367,6 +1367,10 @@
         if (quickFilterMode === "city") return QUICK_CITY_TITLES.includes(task.title);
         if (quickFilterMode === "phone") return task.phoneRequired;
         return true;
+      }).sort((a, b) => {
+        const doneRank = (a.status === "完了") - (b.status === "完了");
+        if (doneRank) return doneRank;
+        return quickMissionScore(a) - quickMissionScore(b);
       });
       document.getElementById("quickChecklist").innerHTML = shownTasks.map(task => {
         const done = task.status === "完了";
