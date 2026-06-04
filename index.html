@@ -490,10 +490,10 @@
 
   <main>
     <section class="quick-check-section mission-hero">
-      <h2>今日のミッション</h2>
+      <h2>TODOリスト</h2>
       <p class="section-help">まずはここだけ進めればOK。重要なものから順番に片付けます。</p>
       <div class="quick-progress-line" id="quickProgressText"></div>
-      <div class="bar quick-progress-bar" aria-label="今日のミッション進捗"><span id="quickProgressBar"></span></div>
+      <div class="bar quick-progress-bar" aria-label="TODOリスト進捗"><span id="quickProgressBar"></span></div>
       <div class="quick-filter-bar" id="quickFilterButtons">
         <button type="button" data-mode="open" onclick="setQuickFilter('open')">未クリアだけ</button>
         <button type="button" data-mode="city" onclick="setQuickFilter('city')">市役所</button>
@@ -1356,7 +1356,7 @@
       const done = tasks.filter(t => t.status === "完了").length;
       const open = total - done;
       const pct = total ? Math.round(done / total * 100) : 0;
-      document.getElementById("quickProgressText").innerHTML = `<strong>今日のミッション進捗：${done} / ${total} クリア、未クリア ${open}、クリア率 ${pct}%</strong><span>${esc(quickFilterLabel())}</span>`;
+      document.getElementById("quickProgressText").innerHTML = `<strong>TODOリスト進捗：${done} / ${total} クリア、未クリア ${open}、クリア率 ${pct}%</strong><span>${esc(quickFilterLabel())}</span>`;
       document.getElementById("quickProgressBar").style.width = pct + "%";
     }
 
