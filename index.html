@@ -327,6 +327,28 @@
     }
     .map-metric strong { display: block; font-size: 22px; line-height: 1.1; }
     .map-metric span { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .detail-mission-panel > summary { background: linear-gradient(90deg, #ffffff 0%, #f7fbf4 100%); }
+    .mission-view-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+    .mission-view-bar button {
+      min-height: 36px;
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: #fff;
+      font-weight: 800;
+    }
+    .mission-view-bar button.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .mission-count-line {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .task-list { gap: 12px; }
     .mission-card {
       position: relative;
       overflow: hidden;
@@ -486,10 +508,19 @@
       </form>
     </section>
 
-    <details class="utility-panel">
+    <details class="utility-panel detail-mission-panel" open>
       <summary><h2>詳細ミッション一覧</h2></summary>
       <div class="panel-body">
-        <div id="taskCountLine"></div>
+        <p class="section-help">重要な手続きを種類ごとに確認できます。迷ったら「未クリア」から進めてください。</p>
+        <div class="mission-view-bar" id="detailMissionButtons">
+          <button type="button" data-mode="open" onclick="setDetailMissionMode('open')">未クリア</button>
+          <button type="button" data-mode="s" onclick="setDetailMissionMode('s')">最重要</button>
+          <button type="button" data-mode="early" onclick="setDetailMissionMode('early')">14日以内</button>
+          <button type="button" data-mode="city" onclick="setDetailMissionMode('city')">市役所・行政</button>
+          <button type="button" data-mode="money" onclick="setDetailMissionMode('money')">お金・保険</button>
+          <button type="button" data-mode="all" onclick="setDetailMissionMode('all')">全部</button>
+        </div>
+        <div id="taskCountLine" class="mission-count-line"></div>
         <div class="task-list" id="taskList"></div>
       </div>
     </details>
@@ -755,6 +786,7 @@
 
     let state = loadState();
     let quickFilterMode = "all";
+    let detailMissionMode = "open";
     let syncTimer = null;
 
     function defaultShareSettings() {
@@ -1212,7 +1244,23 @@
     }
 
     function taskMatches(task) {
+      if (detailMissionMode === "open") return task.status !== "完了";
+      if (detailMissionMode === "s") return task.priority === "S" && task.status !== "完了";
+      if (detailMissionMode === "early") return ["帰国当日〜3日以内", "14日以内", "1〜2週間以内"].includes(task.timing) && task.status !== "完了";
+      if (detailMissionMode === "city") return ["住所・市役所", "マイナンバー", "健康保険", "年金"].includes(task.category) && task.status !== "完了";
+      if (detailMissionMode === "money") return ["銀行", "証券", "保険", "税金"].includes(task.category) && task.status !== "完了";
       return true;
+    }
+
+    function detailMissionLabel() {
+      return { open: "未クリア", s: "最重要", early: "14日以内", city: "市役所・行政", money: "お金・保険", all: "全部" }[detailMissionMode] || "未クリア";
+    }
+
+    function missionSortValue(task) {
+      const timingRank = { "帰国当日〜3日以内": 0, "14日以内": 1, "1〜2週間以内": 2, "1か月以内": 3, "1〜2か月以内": 4, "3〜6か月以内": 5 }[task.timing] ?? 9;
+      const priorityRank = { S: 0, A: 1, B: 2, C: 3 }[task.priority] ?? 9;
+      const doneRank = task.status === "完了" ? 1 : 0;
+      return doneRank * 1000 + priorityRank * 100 + timingRank;
     }
 
     function render() {
@@ -1348,9 +1396,15 @@
     }
 
     function renderTasks() {
-      const tasks = state.tasks.filter(taskMatches);
-      document.getElementById("taskCountLine").textContent = `表示中：${tasks.length}件`;
+      const tasks = state.tasks.filter(taskMatches).sort((a, b) => missionSortValue(a) - missionSortValue(b));
+      document.querySelectorAll("#detailMissionButtons button").forEach(button => button.classList.toggle("active", button.dataset.mode === detailMissionMode));
+      document.getElementById("taskCountLine").textContent = `${detailMissionLabel()}：${tasks.length}件`;
       document.getElementById("taskList").innerHTML = tasks.map(taskCard).join("") || `<div class="empty">該当するミッションはありません。</div>`;
+    }
+
+    function setDetailMissionMode(mode) {
+      detailMissionMode = mode;
+      renderTasks();
     }
 
     function taskCard(t) {
