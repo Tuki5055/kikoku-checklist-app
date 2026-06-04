@@ -1344,9 +1344,6 @@
       return QUICK_CHECK_TITLES.map(title => state.tasks.find(task => task.title === title)).filter(Boolean);
     }
 
-    function getNextRecommendedTask() {
-      return state.tasks.filter(task => task.status !== "完了").sort((a, b) => quickMissionScore(a) - quickMissionScore(b))[0];
-    }
 
     function renderQuickProgress(tasks) {
       const total = tasks.length;
