@@ -465,22 +465,6 @@
       </details>
     </section>
 
-    <details class="utility-panel">
-      <summary><h2>詳細検索・絞り込み</h2></summary>
-      <div class="panel-body">
-        <div class="filters">
-          <label>期限<select id="filterTiming"></select></label>
-          <label>分野<select id="filterCategory"></select></label>
-          <label>優先度<select id="filterPriority"></select></label>
-          <label>状態<select id="filterStatus"></select></label>
-          <label>キーワード検索<input id="searchText" type="search" placeholder="タスク名・メモ・注意点"></label>
-        </div>
-        <div class="toolbar">
-          <button onclick="clearFilters()">絞り込み解除</button>
-        </div>
-      </div>
-    </details>
-
     <section class="edit-area hidden" id="taskFormSection">
       <h2 id="formTitle">ミッション追加</h2>
       <form id="taskForm" class="form-grid">
@@ -837,15 +821,10 @@
       el.innerHTML = (allLabel ? `<option value="">${allLabel}</option>` : "") + values.map(v => `<option value="${esc(v)}">${esc(formatter(v))}</option>`).join("");
     }
     function initControls() {
-      fillSelect("filterTiming", TIMINGS, "すべて");
-      fillSelect("filterCategory", CATEGORIES, "すべて", displayCategory);
-      fillSelect("filterPriority", PRIORITIES, "すべて", displayPriority);
-      fillSelect("filterStatus", ["未完了", "完了", "要確認"], "すべて", displayStatus);
       fillSelect("taskCategory", CATEGORIES, null, displayCategory);
       fillSelect("taskTiming", TIMINGS);
       fillSelect("taskPriority", PRIORITIES, null, displayPriority);
       fillSelect("taskStatus", STATUSES, null, displayStatus);
-      ["filterTiming", "filterCategory", "filterPriority", "filterStatus", "searchText"].forEach(id => document.getElementById(id).addEventListener("input", render));
       document.getElementById("importFile").addEventListener("change", importJson);
       document.getElementById("taskForm").addEventListener("submit", saveTaskFromForm);
       renderShareSettings();
@@ -1239,13 +1218,7 @@
     }
 
     function taskMatches(task) {
-      const timing = document.getElementById("filterTiming").value;
-      const category = document.getElementById("filterCategory").value;
-      const priority = document.getElementById("filterPriority").value;
-      const status = document.getElementById("filterStatus").value;
-      const q = document.getElementById("searchText").value.trim().toLowerCase();
-      const hay = [task.title, task.category, task.timing, task.priority, task.status, task.note, task.caution, task.documents.join(" "), task.related.join(" ")].join(" ").toLowerCase();
-      return (!timing || task.timing === timing) && (!category || task.category === category) && (!priority || task.priority === priority) && (!status || task.status === status) && (!q || hay.includes(q));
+      return true;
     }
 
     function render() {
@@ -1266,7 +1239,6 @@
       const open = total - done;
       const sOpen = state.tasks.filter(t => t.priority === "S" && t.status !== "完了").length;
       const confirm = state.tasks.filter(t => t.status === "要確認").length;
-      const todayCount = state.tasks.filter(t => t.today && t.status !== "完了").length;
       const pct = total ? Math.round(done / total * 100) : 0;
       const progressBar = document.getElementById("progressBar");
       if (progressBar) progressBar.style.width = pct + "%";
@@ -1275,7 +1247,7 @@
       const headerStats = document.getElementById("headerStats");
       if (headerStats) {
         headerStats.innerHTML = [
-          ["全体進捗", pct + "%"], ["未クリア", open], ["今日のミッション", todayCount], ["最重要", sOpen], ["要チェック", confirm], ["現在地", restartLevelLabel(pct)]
+          ["全体進捗", pct + "%"], ["未クリア", open], ["最重要", sOpen], ["要チェック", confirm], ["現在地", restartLevelLabel(pct)]
         ].map(([label, value]) => `<div class="stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join("");
       }
     }
@@ -1317,7 +1289,6 @@
           <span class="quick-check-meta">
             <span class="chip">${esc(task.timing)}</span>
             <span class="chip ${task.priority === "S" ? "s" : ""}">${esc(displayPriority(task.priority))}</span>
-            <button class="small quick-today ${task.today ? "active" : ""}" type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleQuickToday('${task.id}')">今日</button>
           </span>
           <span class="quick-check-complete">${done ? "✓ クリア" : ""}</span>
         </label>`;
@@ -1354,7 +1325,6 @@
       const count = pred => open.filter(pred).length;
       const pct = total ? Math.round(done / total * 100) : 0;
       const metrics = [
-        ["今日のミッション", count(t => t.today)],
         ["未クリア", open.length],
         ["最重要", count(t => t.priority === "S")],
         ["要チェック", state.tasks.filter(t => t.status === "要確認").length]
@@ -1412,7 +1382,6 @@
         </div>
         <div class="mission-actions">
           <button class="small primary-clear" onclick="toggleDone('${t.id}')">${done ? "未クリアに戻す" : "クリア"}</button>
-          <button class="small ${t.today ? "primary" : ""}" onclick="toggleToday('${t.id}')">今日のミッション</button>
           <button class="small" onclick="toggleLater('${t.id}')">あとで確認</button>
           <button class="small" onclick="markConfirm('${t.id}')">要チェック</button>
           <button class="small" onclick="editTask('${t.id}')">編集</button>
@@ -1518,10 +1487,6 @@
     }
     function updateContact(id, key, value) { state.contacts.find(c => c.id === id)[key] = value; save({ sync: true }); }
 
-    function clearFilters() {
-      ["filterTiming", "filterCategory", "filterPriority", "filterStatus", "searchText"].forEach(id => document.getElementById(id).value = "");
-      render();
-    }
     function exportJson() {
       save({ sync: false });
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
