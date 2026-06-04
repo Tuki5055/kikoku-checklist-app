@@ -349,6 +349,24 @@
       font-weight: 800;
     }
     .task-list { gap: 12px; }
+    .compact-mission-list .mission-card { padding: 12px; }
+    .mission-check-layout {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+    .mission-check {
+      width: 24px;
+      height: 24px;
+      margin-top: 3px;
+      accent-color: var(--brand);
+    }
+    .compact-mission-list .mission-title { margin-top: 7px; font-size: 16px; }
+    .compact-mission-list .mission-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; }
+    .compact-mission-list .mission-meta-box { min-height: 0; padding: 7px 8px; }
+    .mission-more { display: flex; justify-content: center; margin-top: 12px; }
+    .mission-more button { min-width: 180px; }
     .mission-card {
       position: relative;
       overflow: hidden;
@@ -521,7 +539,8 @@
           <button type="button" data-mode="all" onclick="setDetailMissionMode('all')">全部</button>
         </div>
         <div id="taskCountLine" class="mission-count-line"></div>
-        <div class="task-list" id="taskList"></div>
+        <div class="task-list compact-mission-list" id="taskList"></div>
+        <div class="mission-more" id="missionMore"></div>
       </div>
     </details>
 
@@ -787,6 +806,7 @@
     let state = loadState();
     let quickFilterMode = "all";
     let detailMissionMode = "open";
+    let detailVisibleCount = 20;
     let syncTimer = null;
 
     function defaultShareSettings() {
@@ -1397,13 +1417,24 @@
 
     function renderTasks() {
       const tasks = state.tasks.filter(taskMatches).sort((a, b) => missionSortValue(a) - missionSortValue(b));
+      const shownTasks = tasks.slice(0, detailVisibleCount);
       document.querySelectorAll("#detailMissionButtons button").forEach(button => button.classList.toggle("active", button.dataset.mode === detailMissionMode));
-      document.getElementById("taskCountLine").textContent = `${detailMissionLabel()}：${tasks.length}件`;
-      document.getElementById("taskList").innerHTML = tasks.map(taskCard).join("") || `<div class="empty">該当するミッションはありません。</div>`;
+      document.getElementById("taskCountLine").textContent = `${detailMissionLabel()}：${shownTasks.length} / ${tasks.length}件`;
+      document.getElementById("taskList").innerHTML = shownTasks.map(taskCard).join("") || `<div class="empty">該当するミッションはありません。</div>`;
+      const more = document.getElementById("missionMore");
+      if (more) {
+        more.innerHTML = tasks.length > shownTasks.length ? `<button type="button" onclick="showMoreMissions()">さらに20件表示</button>` : "";
+      }
     }
 
     function setDetailMissionMode(mode) {
       detailMissionMode = mode;
+      detailVisibleCount = 20;
+      renderTasks();
+    }
+
+    function showMoreMissions() {
+      detailVisibleCount += 20;
       renderTasks();
     }
 
@@ -1412,34 +1443,38 @@
       const docs = t.documents.join("、") || "なし";
       const related = t.related.join("、") || "なし";
       return `<article class="task-card mission-card ${done ? "done" : ""} ${t.priority === "S" ? "priority-s" : ""}">
-        <div class="mission-top">
-          <div class="chips">
-            <span class="chip">${esc(displayCategory(t.category))}</span>
-            <span class="chip ${t.priority === "S" ? "s" : ""}">${esc(displayPriority(t.priority))}</span>
-            <span class="chip ${t.status === "要確認" ? "check" : done ? "ok" : ""}">${esc(displayStatus(t.status))}</span>
+        <div class="mission-check-layout">
+          <input class="mission-check" type="checkbox" ${done ? "checked" : ""} onchange="toggleDone('${t.id}')" aria-label="${esc(t.title)}をクリア">
+          <div>
+            <div class="mission-top">
+              <div class="chips">
+                <span class="chip">${esc(displayCategory(t.category))}</span>
+                <span class="chip ${t.priority === "S" ? "s" : ""}">${esc(displayPriority(t.priority))}</span>
+                <span class="chip ${t.status === "要確認" ? "check" : done ? "ok" : ""}">${esc(displayStatus(t.status))}</span>
+              </div>
+              <span class="quick-check-complete">${done ? "✓ クリア" : ""}</span>
+            </div>
+            <div class="mission-title ${t.priority === "S" ? "s" : ""}">${esc(t.title)}</div>
+            <div class="mission-meta">
+              <div class="mission-meta-box"><b>期限</b>${esc(t.timing)}</div>
+              <div class="mission-meta-box"><b>必要書類</b>${esc(docs)}</div>
+            </div>
+            <div class="mission-actions">
+              <button class="small" onclick="toggleLater('${t.id}')">あとで確認</button>
+              <button class="small" onclick="markConfirm('${t.id}')">要チェック</button>
+              <button class="small" onclick="editTask('${t.id}')">編集</button>
+              <button class="small danger" onclick="deleteTask('${t.id}')">削除</button>
+            </div>
+            <details class="mission-note-grid">
+              <summary>関連・メモ・注意点</summary>
+              <div class="detail-grid">
+                <div class="detail-box"><b>関連</b>${esc(related)}</div>
+                <div class="detail-box caution-box"><b>注意点</b>${esc(t.caution || "なし")}</div>
+                <label class="detail-box wide"><b>メモ</b><textarea oninput="updateTaskNote('${t.id}', this.value)">${esc(t.note || "")}</textarea></label>
+              </div>
+            </details>
           </div>
-          <span class="quick-check-complete">${done ? "✓ クリア" : ""}</span>
         </div>
-        <div class="mission-title ${t.priority === "S" ? "s" : ""}">${esc(t.title)}</div>
-        <div class="mission-meta">
-          <div class="mission-meta-box"><b>期限</b>${esc(t.timing)}</div>
-          <div class="mission-meta-box"><b>必要書類</b>${esc(docs)}</div>
-          <div class="mission-meta-box"><b>関連</b>${esc(related)}</div>
-        </div>
-        <div class="mission-actions">
-          <button class="small primary-clear" onclick="toggleDone('${t.id}')">${done ? "未クリアに戻す" : "クリア"}</button>
-          <button class="small" onclick="toggleLater('${t.id}')">あとで確認</button>
-          <button class="small" onclick="markConfirm('${t.id}')">要チェック</button>
-          <button class="small" onclick="editTask('${t.id}')">編集</button>
-          <button class="small danger" onclick="deleteTask('${t.id}')">削除</button>
-        </div>
-        <details class="mission-note-grid">
-          <summary>メモ・注意点</summary>
-          <div class="detail-grid">
-            <div class="detail-box caution-box"><b>注意点</b>${esc(t.caution || "なし")}</div>
-            <label class="detail-box"><b>メモ</b><textarea oninput="updateTaskNote('${t.id}', this.value)">${esc(t.note || "")}</textarea></label>
-          </div>
-        </details>
       </article>`;
     }
 
