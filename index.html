@@ -1338,16 +1338,11 @@
     }
 
     function getQuickChecklistTasks() {
-      const todayTasks = state.tasks.filter(task => task.today && task.status !== "完了").sort((a, b) => quickMissionScore(a) - quickMissionScore(b));
-      if (todayTasks.length) return todayTasks;
-      return state.tasks
-        .filter(task => task.status !== "完了" && ["S", "A"].includes(task.priority))
-        .sort((a, b) => quickMissionScore(a) - quickMissionScore(b))
-        .slice(0, 5);
+      return QUICK_CHECK_TITLES.map(title => state.tasks.find(task => task.title === title)).filter(Boolean);
     }
 
     function getNextRecommendedTask() {
-      return getQuickChecklistTasks().find(task => task.status !== "完了") || state.tasks.filter(task => task.status !== "完了").sort((a, b) => quickMissionScore(a) - quickMissionScore(b))[0];
+      return state.tasks.filter(task => task.status !== "完了").sort((a, b) => quickMissionScore(a) - quickMissionScore(b))[0];
     }
 
     function renderQuickProgress(tasks) {
@@ -1355,9 +1350,7 @@
       const done = tasks.filter(t => t.status === "完了").length;
       const open = total - done;
       const pct = total ? Math.round(done / total * 100) : 0;
-      const hasToday = tasks.some(task => task.today && task.status !== "完了");
-      const sourceLabel = hasToday ? "今日指定" : "自動おすすめ";
-      document.getElementById("quickProgressText").innerHTML = `<strong>今日のミッション進捗：${done} / ${total} クリア、未クリア ${open}、クリア率 ${pct}%</strong><span>${esc(sourceLabel)} / ${esc(quickFilterLabel())}</span>`;
+      document.getElementById("quickProgressText").innerHTML = `<strong>今日のミッション進捗：${done} / ${total} クリア、未クリア ${open}、クリア率 ${pct}%</strong><span>${esc(quickFilterLabel())}</span>`;
       document.getElementById("quickProgressBar").style.width = pct + "%";
     }
 
