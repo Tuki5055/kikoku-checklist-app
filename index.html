@@ -555,13 +555,6 @@
       </div>
     </details>
 
-    <details class="utility-panel">
-      <summary><h2>重要書類リスト</h2></summary>
-      <div class="panel-body">
-        <div class="doc-grid" id="documents"></div>
-      </div>
-    </details>
-
     <details class="utility-panel" id="adminMenu">
       <summary><h2>設定・バックアップ</h2></summary>
       <div class="panel-body compact-admin">
@@ -1291,7 +1284,6 @@
       renderDashboard();
       renderTasks();
       renderCity();
-      renderDocuments();
     }
 
     function renderHeader() {
@@ -1547,7 +1539,9 @@
     }
 
     function renderDocuments() {
-      document.getElementById("documents").innerHTML = state.documents.map(doc => `<label class="check-row">
+      const documentsEl = document.getElementById("documents");
+      if (!documentsEl) return;
+      documentsEl.innerHTML = state.documents.map(doc => `<label class="check-row">
         <input type="checkbox" ${doc.done ? "checked" : ""} onchange="toggleDocument('${doc.id}')">
         <span><b>${esc(doc.name)}</b><input value="${esc(doc.note)}" placeholder="メモ" oninput="updateDocument('${doc.id}', this.value)"></span>
       </label>`).join("");
