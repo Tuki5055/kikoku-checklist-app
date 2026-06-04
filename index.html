@@ -59,6 +59,7 @@
       backdrop-filter: blur(10px);
     }
     .header-inner, main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+    .header-inner { padding-top: 10px; padding-bottom: 10px; }
     .title-row { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
     h1 { margin: 0; font-size: clamp(25px, 4vw, 38px); letter-spacing: 0; }
     h2 { margin: 0 0 12px; font-size: 20px; letter-spacing: 0; }
@@ -433,10 +434,6 @@
           </div>
         </div>
       </div>
-      <div class="progress-wrap map-progress">
-        <div class="bar" aria-label="全体進捗"><span id="progressBar"></span></div>
-      </div>
-      <div class="stats" id="headerStats"></div>
     </div>
   </header>
 
@@ -1272,12 +1269,16 @@
       const confirm = state.tasks.filter(t => t.status === "要確認").length;
       const todayCount = state.tasks.filter(t => t.today && t.status !== "完了").length;
       const pct = total ? Math.round(done / total * 100) : 0;
-      document.getElementById("progressBar").style.width = pct + "%";
+      const progressBar = document.getElementById("progressBar");
+      if (progressBar) progressBar.style.width = pct + "%";
       if (document.getElementById("headerCurrentLevel")) document.getElementById("headerCurrentLevel").textContent = restartLevelLabel(pct);
       if (document.getElementById("headerClearCount")) document.getElementById("headerClearCount").textContent = `${done} / ${total}`;
-      document.getElementById("headerStats").innerHTML = [
-        ["全体進捗", pct + "%"], ["未クリア", open], ["今日のミッション", todayCount], ["最重要", sOpen], ["要チェック", confirm], ["現在地", restartLevelLabel(pct)]
-      ].map(([label, value]) => `<div class="stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join("");
+      const headerStats = document.getElementById("headerStats");
+      if (headerStats) {
+        headerStats.innerHTML = [
+          ["全体進捗", pct + "%"], ["未クリア", open], ["今日のミッション", todayCount], ["最重要", sOpen], ["要チェック", confirm], ["現在地", restartLevelLabel(pct)]
+        ].map(([label, value]) => `<div class="stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join("");
+      }
     }
 
 
