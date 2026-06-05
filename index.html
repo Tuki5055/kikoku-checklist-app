@@ -934,7 +934,7 @@
     function defaultShareSettings() {
       return {
         mode: "local",
-        gasEndpointUrl: localStorage.getItem(GAS_URL_KEY) || "",
+        gasEndpointUrl: "",
         syncEnabled: false,
         autoLoadIntervalSec: 60,
         lastSyncAt: "",
@@ -950,7 +950,11 @@
 
     function rememberGasEndpoint(url) {
       const value = String(url || "").trim();
-      if (value) localStorage.setItem(GAS_URL_KEY, value);
+      if (value) {
+        localStorage.setItem(GAS_URL_KEY, value);
+      } else {
+        localStorage.removeItem(GAS_URL_KEY);
+      }
     }
 
     function normalizeState(input) {
