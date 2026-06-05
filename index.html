@@ -1129,48 +1129,34 @@
     function getCurrentStateForSync() {
       state.lastUpdatedAt = new Date().toISOString();
       state.lastUpdatedBy = getUserName();
-      const taskProgress = {};
+      const taskSnapshot = { d: [], c: [], y: [], l: [], n: {} };
       state.tasks.forEach(task => {
-        const progress = {
-          status: task.status,
-          today: Boolean(task.today),
-          later: Boolean(task.later),
-          note: task.note || ""
-        };
-        if (progress.status !== "未完了" || progress.today || progress.later || progress.note) {
-          taskProgress[task.id] = progress;
-        }
+        if (task.status === "完了") taskSnapshot.d.push(task.id);
+        if (task.status === "要確認") taskSnapshot.c.push(task.id);
+        if (task.today) taskSnapshot.y.push(task.id);
+        if (task.later) taskSnapshot.l.push(task.id);
+        if (task.note) taskSnapshot.n[task.id] = task.note;
       });
-      const documentProgress = {};
+      const documentSnapshot = { d: [], n: {} };
       state.documents.forEach(doc => {
-        const progress = {
-          done: Boolean(doc.done),
-          note: doc.note || ""
-        };
-        if (progress.done || progress.note) {
-          documentProgress[doc.id] = progress;
-        }
+        if (doc.done) documentSnapshot.d.push(doc.id);
+        if (doc.note) documentSnapshot.n[doc.id] = doc.note;
       });
-      const contactProgress = {};
+      const contactSnapshot = { s: {}, g: {}, w: {}, b: {}, r: {} };
       state.contacts.forEach(contact => {
-        const progress = {
-          status: contact.status,
-          generalNumberMemo: contact.generalNumberMemo || "",
-          webMemo: contact.webMemo || "",
-          beforeMemo: contact.beforeMemo || "",
-          resultMemo: contact.resultMemo || ""
-        };
-        if (progress.status !== "未確認" || progress.generalNumberMemo || progress.webMemo || progress.beforeMemo || progress.resultMemo) {
-          contactProgress[contact.id] = progress;
-        }
+        if (contact.status && contact.status !== "未確認") contactSnapshot.s[contact.id] = contact.status;
+        if (contact.generalNumberMemo) contactSnapshot.g[contact.id] = contact.generalNumberMemo;
+        if (contact.webMemo) contactSnapshot.w[contact.id] = contact.webMemo;
+        if (contact.beforeMemo) contactSnapshot.b[contact.id] = contact.beforeMemo;
+        if (contact.resultMemo) contactSnapshot.r[contact.id] = contact.resultMemo;
       });
       return {
-        version: 1,
+        version: 2,
         lastUpdatedAt: state.lastUpdatedAt,
         lastUpdatedBy: state.lastUpdatedBy,
-        tasks: taskProgress,
-        documents: documentProgress,
-        contacts: contactProgress
+        t: taskSnapshot,
+        d: documentSnapshot,
+        c: contactSnapshot
       };
     }
 
@@ -1181,10 +1167,45 @@
     }
 
     function isProgressOnlyState(sharedState) {
-      return sharedState && sharedState.version === 1 && sharedState.tasks && !Array.isArray(sharedState.tasks);
+      return sharedState && (
+        (sharedState.version === 1 && sharedState.tasks && !Array.isArray(sharedState.tasks)) ||
+        (sharedState.version === 2 && sharedState.t)
+      );
     }
 
     function mergeProgressState(sharedState) {
+      if (sharedState.version === 2) {
+        const taskSnapshot = sharedState.t || {};
+        const doneIds = new Set(taskSnapshot.d || []);
+        const checkIds = new Set(taskSnapshot.c || []);
+        const todayIds = new Set(taskSnapshot.y || []);
+        const laterIds = new Set(taskSnapshot.l || []);
+        const notes = taskSnapshot.n || {};
+        state.tasks.forEach(task => {
+          task.status = doneIds.has(task.id) ? "完了" : checkIds.has(task.id) ? "要確認" : "未完了";
+          task.today = todayIds.has(task.id);
+          task.later = laterIds.has(task.id);
+          task.note = typeof notes[task.id] === "string" ? notes[task.id] : "";
+        });
+        const documentSnapshot = sharedState.d || {};
+        const doneDocIds = new Set(documentSnapshot.d || []);
+        const docNotes = documentSnapshot.n || {};
+        state.documents.forEach(doc => {
+          doc.done = doneDocIds.has(doc.id);
+          doc.note = typeof docNotes[doc.id] === "string" ? docNotes[doc.id] : "";
+        });
+        const contactSnapshot = sharedState.c || {};
+        state.contacts.forEach(contact => {
+          contact.status = contactSnapshot.s?.[contact.id] || "未確認";
+          contact.generalNumberMemo = contactSnapshot.g?.[contact.id] || "";
+          contact.webMemo = contactSnapshot.w?.[contact.id] || "";
+          contact.beforeMemo = contactSnapshot.b?.[contact.id] || "";
+          contact.resultMemo = contactSnapshot.r?.[contact.id] || "";
+        });
+        state.lastUpdatedAt = sharedState.lastUpdatedAt || state.lastUpdatedAt;
+        state.lastUpdatedBy = sharedState.lastUpdatedBy || state.lastUpdatedBy;
+        return;
+      }
       const taskProgress = sharedState.tasks || {};
       state.tasks.forEach(task => {
         const update = taskProgress[task.id];
