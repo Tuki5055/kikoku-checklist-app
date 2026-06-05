@@ -1111,42 +1111,32 @@
     }
 
     function getCurrentStateForSync() {
-      state.lastUpdatedAt = new Date().toISOString();
-      state.lastUpdatedBy = getUserName();
+      // タイムスタンプは save() で更新済みなので再更新しない（二重更新によるGAS側が「新しく見える」バグ防止）
       const taskProgress = {};
       state.tasks.forEach(task => {
-        const progress = {
+        taskProgress[task.id] = {
           status: task.status,
           today: Boolean(task.today),
           later: Boolean(task.later),
           note: task.note || ""
         };
-        if (progress.status !== "未完了" || progress.today || progress.later || progress.note) {
-          taskProgress[task.id] = progress;
-        }
       });
       const documentProgress = {};
       state.documents.forEach(doc => {
-        const progress = {
+        documentProgress[doc.id] = {
           done: Boolean(doc.done),
           note: doc.note || ""
         };
-        if (progress.done || progress.note) {
-          documentProgress[doc.id] = progress;
-        }
       });
       const contactProgress = {};
       state.contacts.forEach(contact => {
-        const progress = {
+        contactProgress[contact.id] = {
           status: contact.status,
           generalNumberMemo: contact.generalNumberMemo || "",
           webMemo: contact.webMemo || "",
           beforeMemo: contact.beforeMemo || "",
           resultMemo: contact.resultMemo || ""
         };
-        if (progress.status !== "未確認" || progress.generalNumberMemo || progress.webMemo || progress.beforeMemo || progress.resultMemo) {
-          contactProgress[contact.id] = progress;
-        }
       });
       return {
         version: 1,
