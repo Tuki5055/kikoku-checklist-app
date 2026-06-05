@@ -749,6 +749,7 @@
     }
 
     function priorityFor(title, timing) {
+      if (["戸籍謄本を取る", "八十二長野銀行の口座開設"].includes(title)) return "S";
       if (keyword(title, ["転入届", "住民票", "マイナンバー", "健康保険", "年金", "携帯", "スマホ", "電話番号", "銀行キャッシュカード", "バンキング", "別送品", "日本円", "SMS"])) return "S";
       if (keyword(title, ["新NISA", "NISA口座", "NISA金融機関", "つみたて投資枠", "成長投資枠", "旧NISA"])) return "A";
       if (keyword(title, ["証券", "保険の住所変更", "免許証", "印鑑登録", "住居", "電気", "ガス", "水道", "インターネット", "税", "会社", "勤務先"])) return "A";
@@ -831,7 +832,7 @@
         ].forEach(({ title, timing }) => {
           if (!nextState.tasks.some(task => task.title === title)) {
             const t = buildTask(title, timing, nextTaskId(nextState.tasks));
-            t.priority = "A";
+            t.priority = "S";
             nextState.tasks.push(t);
           }
         });
@@ -843,8 +844,13 @@
       ].forEach(({ title, timing }) => {
         if (!nextState.tasks.some(task => task.title === title)) {
           const t = buildTask(title, timing, nextTaskId(nextState.tasks));
-          t.priority = "A";
+          t.priority = "S";
           nextState.tasks.push(t);
+        }
+      });
+      nextState.tasks.forEach(task => {
+        if (["戸籍謄本を取る", "八十二長野銀行の口座開設"].includes(task.title)) {
+          task.priority = "S";
         }
       });
       nextState.migrations = migrations;
@@ -1479,7 +1485,7 @@
         <input type="text" id="quickAddInput" placeholder="TODOを追記..." onkeydown="if(event.key==='Enter') quickAddTask()" aria-label="TODOを追記">
         <button type="button" class="primary" onclick="quickAddTask()">追加</button>
       </div>`;
-      document.getElementById("quickChecklist").innerHTML = taskRows + addRow;
+      document.getElementById("quickChecklist").innerHTML = addRow + taskRows;
     }
 
     function toggleQuickDone(taskId) {
