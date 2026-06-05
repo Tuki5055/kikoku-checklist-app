@@ -471,9 +471,21 @@
       font-weight: 700;
     }
     .quick-note-line {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
       border-left: 3px solid var(--line);
       padding-left: 8px;
       overflow-wrap: anywhere;
+    }
+    .quick-note-delete {
+      min-height: 26px;
+      padding: 3px 7px;
+      font-size: 12px;
+      color: var(--danger);
+      border-color: #f0b8bf;
+      background: #fff;
     }
     .quick-note-form {
       display: grid;
@@ -1495,6 +1507,17 @@
       showToast("TODOにメモを追記しました", "ok");
     }
 
+    function deleteQuickNote(taskId, noteIndex) {
+      const task = findTask(taskId);
+      if (!task) return;
+      const notes = quickNoteLines(task);
+      notes.splice(noteIndex, 1);
+      task.note = notes.join("\n");
+      save({ sync: true });
+      render();
+      showToast("メモを削除しました", "ok");
+    }
+
 
     function renderQuickProgress(tasks) {
       const total = tasks.length;
@@ -1526,7 +1549,7 @@
       const taskRows = shownTasks.map(task => {
         const done = task.status === "完了";
         const notes = quickNoteLines(task);
-        const noteList = notes.length ? `<div class="quick-note-list">${notes.map(note => `<div class="quick-note-line">${esc(note)}</div>`).join("")}</div>` : "";
+        const noteList = notes.length ? `<div class="quick-note-list">${notes.map((note, index) => `<div class="quick-note-line"><span>${esc(note)}</span><button type="button" class="quick-note-delete" onclick="deleteQuickNote('${task.id}', ${index})">メモ削除</button></div>`).join("")}</div>` : "";
         const noteForm = quickNoteOpenId === task.id ? `<div class="quick-note-form">
           <input type="text" id="quickNoteInput-${esc(task.id)}" placeholder="${esc(task.title)} にメモを追記..." onkeydown="if(event.key==='Enter') addQuickNote('${task.id}')">
           <button type="button" class="small" onclick="addQuickNote('${task.id}')">追加</button>
