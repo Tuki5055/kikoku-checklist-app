@@ -1554,7 +1554,7 @@
         </select>
         <button type="button" class="primary" onclick="quickAddTask()">追加</button>
       </div>`;
-      document.getElementById("quickChecklist").innerHTML = addRow + taskRows;
+      document.getElementById("quickChecklist").innerHTML = taskRows + addRow;
     }
 
     function toggleQuickDone(taskId) {
