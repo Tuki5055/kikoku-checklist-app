@@ -1532,7 +1532,7 @@
           <button type="button" class="small" onclick="addQuickNote('${task.id}')">追加</button>
         </div>` : "";
         return `<div class="quick-check-item ${done ? "done" : ""}">
-          <input type="checkbox" ${done ? "checked" : ""} onchange="toggleQuickDone('${task.id}')" aria-label="${esc(task.title)}をクリア">
+          <input type="checkbox" ${done ? "checked" : ""} onchange="toggleQuickDone('${task.id}', this)" aria-label="${esc(task.title)}をクリア">
           <span class="quick-check-main ${task.priority === "S" ? "s" : ""}">${esc(task.title)}</span>
           <span class="quick-check-meta">
             <span class="chip">${esc(task.timing)}</span>
@@ -1557,14 +1557,22 @@
       document.getElementById("quickChecklist").innerHTML = taskRows + addRow;
     }
 
-    function toggleQuickDone(taskId) {
+    function toggleQuickDone(taskId, checkbox) {
       const task = findTask(taskId);
       if (!task) return;
       const willClear = task.status !== "完了";
       task.status = willClear ? "完了" : "未完了";
       save({ sync: true });
-      render();
-      if (willClear) showToast("ミッションクリア。生活基盤が一歩整いました", "ok");
+      if (willClear && checkbox) {
+        const row = checkbox.closest(".quick-check-item");
+        row?.classList.add("done");
+        const complete = row?.querySelector(".quick-check-complete");
+        if (complete) complete.textContent = "✓ クリア";
+        showToast("ミッションクリア。生活基盤が一歩整いました", "ok");
+        setTimeout(render, 700);
+      } else {
+        render();
+      }
     }
 
     function toggleQuickToday(taskId) {
