@@ -706,7 +706,6 @@
   <script>
     const STORAGE_KEY = "return-japan-checklist-state-v1";
     const USER_NAME_KEY = "return-japan-checklist-user-name-v1";
-    const GAS_URL_KEY = "return-japan-checklist-gas-url-v1";
     const TIMINGS = ["帰国当日〜3日以内", "14日以内", "1〜2週間以内", "1か月以内", "1〜2か月以内", "3〜6か月以内"];
     const CATEGORIES = ["住所・市役所", "マイナンバー", "健康保険", "年金", "銀行", "証券", "保険", "税金", "携帯・通信", "住居", "車", "子育て", "仕事", "資格・学習", "生活用品", "電話・問い合わせ", "重要書類"];
     const PRIORITIES = ["S", "A", "B", "C"];
@@ -934,7 +933,7 @@
     function defaultShareSettings() {
       return {
         mode: "local",
-        gasEndpointUrl: localStorage.getItem(GAS_URL_KEY) || "",
+        gasEndpointUrl: "",
         syncEnabled: false,
         autoLoadIntervalSec: 60,
         lastSyncAt: "",
@@ -948,16 +947,9 @@
       return localStorage.getItem(USER_NAME_KEY) || state?.lastUpdatedBy || "未設定";
     }
 
-    function rememberGasEndpoint(url) {
-      const value = String(url || "").trim();
-      if (value) localStorage.setItem(GAS_URL_KEY, value);
-    }
-
     function normalizeState(input) {
       const initial = input || {};
       const shareSettings = { ...defaultShareSettings(), ...(initial.shareSettings || {}) };
-      if (!shareSettings.gasEndpointUrl) shareSettings.gasEndpointUrl = localStorage.getItem(GAS_URL_KEY) || "";
-      rememberGasEndpoint(shareSettings.gasEndpointUrl);
       const nextState = {
         ...initial,
         tasks: Array.isArray(initial.tasks) && initial.tasks.length ? initial.tasks : buildInitialTasks(),
@@ -1010,14 +1002,11 @@
 
     function getShareSettings() {
       state.shareSettings = { ...defaultShareSettings(), ...(state.shareSettings || {}) };
-      if (!state.shareSettings.gasEndpointUrl) state.shareSettings.gasEndpointUrl = localStorage.getItem(GAS_URL_KEY) || "";
-      rememberGasEndpoint(state.shareSettings.gasEndpointUrl);
       return state.shareSettings;
     }
 
     function saveShareSettings() {
       state.shareSettings = { ...defaultShareSettings(), ...(state.shareSettings || {}) };
-      rememberGasEndpoint(state.shareSettings.gasEndpointUrl);
       save({ sync: false, touch: false });
       renderShareSettings();
     }
@@ -1085,7 +1074,6 @@
 
     function updateGasEndpoint(value) {
       state.shareSettings.gasEndpointUrl = value.trim();
-      rememberGasEndpoint(state.shareSettings.gasEndpointUrl);
       saveShareSettings();
     }
 
