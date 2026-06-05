@@ -424,7 +424,7 @@
     .toast.error { background: var(--danger); }
     .quick-add-row {
       display: grid;
-      grid-template-columns: 34px minmax(0, 1fr) auto;
+      grid-template-columns: 34px minmax(0, 1fr) 120px auto;
       gap: 10px;
       align-items: center;
       min-height: 56px;
@@ -449,11 +449,36 @@
       border-radius: 12px;
       background: #fff;
     }
+    .quick-add-row select { height: 40px; padding: 7px 10px; }
     .quick-add-row button {
       height: 40px;
       white-space: nowrap;
       padding: 0 16px;
       border-radius: 12px;
+    }
+    .quick-note-button { min-height: 30px; padding: 4px 8px; font-size: 12px; }
+    .quick-note-area {
+      grid-column: 2 / -1;
+      display: grid;
+      gap: 6px;
+      margin-top: -4px;
+    }
+    .quick-note-list {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .quick-note-line {
+      border-left: 3px solid var(--line);
+      padding-left: 8px;
+      overflow-wrap: anywhere;
+    }
+    .quick-note-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
     }
     @media (max-width: 820px) {
       .header-map, .progress-map-card { grid-template-columns: 1fr; }
@@ -464,7 +489,8 @@
       .quick-check-item { grid-template-columns: 34px minmax(0, 1fr) auto; }
       .quick-check-complete { grid-column: 2 / -1; text-align: left; }
       .quick-add-row { grid-template-columns: 34px minmax(0, 1fr); }
-      .quick-add-row button { grid-column: 2 / -1; }
+      .quick-add-row select, .quick-add-row button { grid-column: 2 / -1; }
+      .quick-note-form { grid-template-columns: 1fr; }
       .filters { grid-template-columns: 1fr 1fr; }
       .task-top { grid-template-columns: auto 1fr; }
       .task-top > .actions { grid-column: 1 / -1; }
@@ -887,6 +913,7 @@
 
     let state = loadState();
     let quickFilterMode = "all";
+    let quickNoteOpenId = "";
     let detailMissionMode = "open";
     let detailVisibleCount = 20;
     let syncTimer = null;
@@ -1424,6 +1451,7 @@
 
     function quickAddTask() {
       const input = document.getElementById("quickAddInput");
+      const prioritySelect = document.getElementById("quickAddPriority");
       if (!input) return;
       const title = input.value.trim();
       if (!title) return;
@@ -1433,11 +1461,38 @@
       }
       const newTask = buildTask(title, "14日以内", nextTaskId(state.tasks));
       newTask.quick = true;
+      newTask.priority = prioritySelect?.value || newTask.priority;
       state.tasks.unshift(newTask);
       save({ sync: true });
       input.value = "";
+      if (prioritySelect) prioritySelect.value = "B";
       render();
       showToast("TODOリストに追記しました", "ok");
+    }
+
+    function quickNoteLines(task) {
+      return String(task.note || "").split("\n").map(line => line.trim()).filter(Boolean);
+    }
+
+    function toggleQuickNoteInput(taskId) {
+      quickNoteOpenId = quickNoteOpenId === taskId ? "" : taskId;
+      renderQuickChecklist();
+      if (quickNoteOpenId) {
+        setTimeout(() => document.getElementById("quickNoteInput-" + taskId)?.focus(), 0);
+      }
+    }
+
+    function addQuickNote(taskId) {
+      const task = findTask(taskId);
+      const input = document.getElementById("quickNoteInput-" + taskId);
+      if (!task || !input) return;
+      const text = input.value.trim();
+      if (!text) return;
+      task.note = [task.note, text].filter(Boolean).join("\n");
+      quickNoteOpenId = "";
+      save({ sync: true });
+      render();
+      showToast("TODOにメモを追記しました", "ok");
     }
 
 
@@ -1470,19 +1525,33 @@
       });
       const taskRows = shownTasks.map(task => {
         const done = task.status === "完了";
-        return `<label class="quick-check-item ${done ? "done" : ""}">
+        const notes = quickNoteLines(task);
+        const noteList = notes.length ? `<div class="quick-note-list">${notes.map(note => `<div class="quick-note-line">${esc(note)}</div>`).join("")}</div>` : "";
+        const noteForm = quickNoteOpenId === task.id ? `<div class="quick-note-form">
+          <input type="text" id="quickNoteInput-${esc(task.id)}" placeholder="${esc(task.title)} にメモを追記..." onkeydown="if(event.key==='Enter') addQuickNote('${task.id}')">
+          <button type="button" class="small" onclick="addQuickNote('${task.id}')">追加</button>
+        </div>` : "";
+        return `<div class="quick-check-item ${done ? "done" : ""}">
           <input type="checkbox" ${done ? "checked" : ""} onchange="toggleQuickDone('${task.id}')" aria-label="${esc(task.title)}をクリア">
           <span class="quick-check-main ${task.priority === "S" ? "s" : ""}">${esc(task.title)}</span>
           <span class="quick-check-meta">
             <span class="chip">${esc(task.timing)}</span>
             <span class="chip ${task.priority === "S" ? "s" : ""}">${esc(displayPriority(task.priority))}</span>
+            <button type="button" class="small quick-note-button" onclick="toggleQuickNoteInput('${task.id}')" aria-label="${esc(task.title)}にメモを追記">＋</button>
           </span>
           <span class="quick-check-complete">${done ? "✓ クリア" : ""}</span>
-        </label>`;
+          ${noteList || noteForm ? `<div class="quick-note-area">${noteList}${noteForm}</div>` : ""}
+        </div>`;
       }).join("") || `<div class="empty">該当するミッションはありません。</div>`;
       const addRow = `<div class="quick-add-row">
         <span class="quick-add-icon" aria-hidden="true">＋</span>
         <input type="text" id="quickAddInput" placeholder="TODOを追記..." onkeydown="if(event.key==='Enter') quickAddTask()" aria-label="TODOを追記">
+        <select id="quickAddPriority" aria-label="追記するTODOの優先度">
+          <option value="B">通常</option>
+          <option value="A">重要</option>
+          <option value="S">最重要</option>
+          <option value="C">低め</option>
+        </select>
         <button type="button" class="primary" onclick="quickAddTask()">追加</button>
       </div>`;
       document.getElementById("quickChecklist").innerHTML = addRow + taskRows;
