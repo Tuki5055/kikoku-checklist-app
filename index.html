@@ -1112,31 +1112,42 @@
 
     function getCurrentStateForSync() {
       // タイムスタンプは save() で更新済みなので再更新しない（二重更新によるGAS側が「新しく見える」バグ防止）
+      const forcedIds = new Set(state.syncForceTaskIds || []);
+      const forcedDocIds = new Set(state.syncForceDocIds || []);
+      const forcedContactIds = new Set(state.syncForceContactIds || []);
       const taskProgress = {};
       state.tasks.forEach(task => {
-        taskProgress[task.id] = {
+        const progress = {
           status: task.status,
           today: Boolean(task.today),
           later: Boolean(task.later),
           note: task.note || ""
         };
+        const nonDefault = progress.status !== "未完了" || progress.today || progress.later || progress.note;
+        if (nonDefault || forcedIds.has(task.id)) {
+          taskProgress[task.id] = progress;
+        }
       });
       const documentProgress = {};
       state.documents.forEach(doc => {
-        documentProgress[doc.id] = {
-          done: Boolean(doc.done),
-          note: doc.note || ""
-        };
+        const progress = { done: Boolean(doc.done), note: doc.note || "" };
+        if (progress.done || progress.note || forcedDocIds.has(doc.id)) {
+          documentProgress[doc.id] = progress;
+        }
       });
       const contactProgress = {};
       state.contacts.forEach(contact => {
-        contactProgress[contact.id] = {
+        const progress = {
           status: contact.status,
           generalNumberMemo: contact.generalNumberMemo || "",
           webMemo: contact.webMemo || "",
           beforeMemo: contact.beforeMemo || "",
           resultMemo: contact.resultMemo || ""
         };
+        const nonDefault = progress.status !== "未確認" || progress.generalNumberMemo || progress.webMemo || progress.beforeMemo || progress.resultMemo;
+        if (nonDefault || forcedContactIds.has(contact.id)) {
+          contactProgress[contact.id] = progress;
+        }
       });
       return {
         version: 1,
@@ -1352,6 +1363,10 @@
         if (!options.silent) setSyncStatus("共有データを保存中...", "warn");
         const result = await saveProgressByJsonp(payload);
         state.shareSettings.lastSyncAt = result.updatedAt || new Date().toLocaleString("ja-JP");
+        // 保存成功後、強制送信リストをクリア
+        state.syncForceTaskIds = [];
+        state.syncForceDocIds = [];
+        state.syncForceContactIds = [];
         setSyncStatus("共有データを保存しました", "ok");
         saveShareSettings();
       } catch (e) {
@@ -1714,7 +1729,12 @@
     function markConfirm(id) { findTask(id).status = "要確認"; save({ sync: true }); render(); }
     function toggleToday(id) { const t = findTask(id); t.today = !t.today; save({ sync: true }); render(); }
     function toggleLater(id) { const t = findTask(id); t.later = !t.later; save({ sync: true }); render(); }
-    function updateTaskNote(id, note) { findTask(id).note = note; save(); renderHeader(); renderDashboard(); }
+    function updateTaskNote(id, note) {
+      const task = findTask(id);
+      task.note = note;
+      if (!note) { state.syncForceTaskIds = [...new Set([...(state.syncForceTaskIds || []), id])]; }
+      save(); renderHeader(); renderDashboard();
+    }
     function deleteTask(id) {
       if (!confirm("このミッションを削除しますか？")) return;
       state.tasks = state.tasks.filter(t => t.id !== id);
@@ -1783,7 +1803,11 @@
       </label>`).join("");
     }
     function toggleDocument(id) { const doc = state.documents.find(d => d.id === id); doc.done = !doc.done; save({ sync: true }); render(); }
-    function updateDocument(id, note) { state.documents.find(d => d.id === id).note = note; save(); }
+    function updateDocument(id, note) {
+      state.documents.find(d => d.id === id).note = note;
+      if (!note) { state.syncForceDocIds = [...new Set([...(state.syncForceDocIds || []), id])]; }
+      save();
+    }
 
     function renderContacts() {
       const contactsEl = document.getElementById("contacts");
@@ -1798,7 +1822,11 @@
         <label>問い合わせ結果メモ<textarea oninput="updateContact('${c.id}', 'resultMemo', this.value)">${esc(c.resultMemo)}</textarea></label>
       </div>`).join("");
     }
-    function updateContact(id, key, value) { state.contacts.find(c => c.id === id)[key] = value; save({ sync: true }); }
+    function updateContact(id, key, value) {
+      state.contacts.find(c => c.id === id)[key] = value;
+      if (!value) { state.syncForceContactIds = [...new Set([...(state.syncForceContactIds || []), id])]; }
+      save({ sync: true });
+    }
 
     function exportJson() {
       save({ sync: false });
