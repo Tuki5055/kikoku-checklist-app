@@ -422,6 +422,38 @@
     .toast.ok { background: var(--ok); }
     .toast.warn { background: var(--warn); }
     .toast.error { background: var(--danger); }
+    .quick-add-panel {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .quick-add-panel summary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--brand);
+      font-weight: 900;
+    }
+    .quick-add-container {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .quick-add-container input {
+      flex: 1;
+      height: 40px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+    .quick-add-container button {
+      height: 40px;
+      white-space: nowrap;
+      padding: 0 16px;
+      border-radius: 12px;
+    }
     @media (max-width: 820px) {
       .header-map, .progress-map-card { grid-template-columns: 1fr; }
       .mission-meta { grid-template-columns: 1fr; }
@@ -430,6 +462,7 @@
       .summary-grid, .doc-grid, .contact-grid, .detail-grid, .form-grid, .share-status-grid { grid-template-columns: 1fr; }
       .quick-check-item { grid-template-columns: 34px minmax(0, 1fr) auto; }
       .quick-check-complete { grid-column: 2 / -1; text-align: left; }
+      .quick-add-container { grid-template-columns: 1fr; }
       .filters { grid-template-columns: 1fr 1fr; }
       .task-top { grid-template-columns: auto 1fr; }
       .task-top > .actions { grid-column: 1 / -1; }
@@ -503,6 +536,13 @@
         <button type="button" data-mode="all" onclick="setQuickFilter('all')">全部</button>
       </div>
       <div class="quick-check-list" id="quickChecklist"></div>
+      <details class="quick-add-panel">
+        <summary>TODOを追加</summary>
+        <div class="quick-add-container">
+          <input type="text" id="quickAddInput" placeholder="例：新しい銀行口座を確認する" onkeydown="if(event.key==='Enter') quickAddTask()">
+          <button type="button" class="primary" onclick="quickAddTask()">追加</button>
+        </div>
+      </details>
     </section>
 
     <section class="compact-dashboard">
@@ -788,6 +828,19 @@
           }
         });
         migrations.addNewNisaTasksV1 = true;
+      }
+      if (!migrations.addJun2026TasksV1) {
+        [
+          { title: "八十二長野銀行の口座開設", timing: "1〜2週間以内" },
+          { title: "戸籍謄本を取る", timing: "14日以内" }
+        ].forEach(({ title, timing }) => {
+          if (!nextState.tasks.some(task => task.title === title)) {
+            const t = buildTask(title, timing, nextTaskId(nextState.tasks));
+            t.priority = "A";
+            nextState.tasks.push(t);
+          }
+        });
+        migrations.addJun2026TasksV1 = true;
       }
       nextState.migrations = migrations;
       return nextState;
@@ -1349,7 +1402,27 @@
     }
 
     function getQuickChecklistTasks() {
-      return QUICK_CHECK_TITLES.map(title => state.tasks.find(task => task.title === title)).filter(Boolean);
+      const fixedTasks = QUICK_CHECK_TITLES.map(title => state.tasks.find(task => task.title === title)).filter(Boolean);
+      const customTasks = state.tasks.filter(task => task.quick);
+      return [...fixedTasks, ...customTasks];
+    }
+
+    function quickAddTask() {
+      const input = document.getElementById("quickAddInput");
+      if (!input) return;
+      const title = input.value.trim();
+      if (!title) return;
+      if (state.tasks.some(t => t.title === title)) {
+        showToast("同名のミッションが既に存在します", "warn");
+        return;
+      }
+      const newTask = buildTask(title, "14日以内", nextTaskId(state.tasks));
+      newTask.quick = true;
+      state.tasks.unshift(newTask);
+      save({ sync: true });
+      input.value = "";
+      render();
+      showToast("TODOリストに追記しました", "ok");
     }
 
 
