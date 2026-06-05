@@ -422,25 +422,26 @@
     .toast.ok { background: var(--ok); }
     .toast.warn { background: var(--warn); }
     .toast.error { background: var(--danger); }
-    .quick-add-panel {
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid var(--line);
-    }
-    .quick-add-panel summary {
-      display: inline-flex;
+    .quick-add-row {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      gap: 10px;
       align-items: center;
-      gap: 6px;
+      min-height: 56px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .quick-add-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      border: 1px dashed var(--brand);
       color: var(--brand);
+      display: grid;
+      place-items: center;
       font-weight: 900;
     }
-    .quick-add-container {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .quick-add-container input {
+    .quick-add-row input {
       flex: 1;
       height: 40px;
       padding: 8px 12px;
@@ -448,7 +449,7 @@
       border-radius: 12px;
       background: #fff;
     }
-    .quick-add-container button {
+    .quick-add-row button {
       height: 40px;
       white-space: nowrap;
       padding: 0 16px;
@@ -462,7 +463,8 @@
       .summary-grid, .doc-grid, .contact-grid, .detail-grid, .form-grid, .share-status-grid { grid-template-columns: 1fr; }
       .quick-check-item { grid-template-columns: 34px minmax(0, 1fr) auto; }
       .quick-check-complete { grid-column: 2 / -1; text-align: left; }
-      .quick-add-container { grid-template-columns: 1fr; }
+      .quick-add-row { grid-template-columns: 34px minmax(0, 1fr); }
+      .quick-add-row button { grid-column: 2 / -1; }
       .filters { grid-template-columns: 1fr 1fr; }
       .task-top { grid-template-columns: auto 1fr; }
       .task-top > .actions { grid-column: 1 / -1; }
@@ -536,13 +538,6 @@
         <button type="button" data-mode="all" onclick="setQuickFilter('all')">全部</button>
       </div>
       <div class="quick-check-list" id="quickChecklist"></div>
-      <details class="quick-add-panel">
-        <summary>TODOを追加</summary>
-        <div class="quick-add-container">
-          <input type="text" id="quickAddInput" placeholder="例：新しい銀行口座を確認する" onkeydown="if(event.key==='Enter') quickAddTask()">
-          <button type="button" class="primary" onclick="quickAddTask()">追加</button>
-        </div>
-      </details>
     </section>
 
     <section class="compact-dashboard">
@@ -682,8 +677,8 @@
     const CITY_DOCS = ["パスポート", "航空券控え・搭乗券", "マイナンバーカード", "運転免許証", "戸籍謄本", "戸籍附票", "印鑑", "実印候補の印鑑", "年金手帳または基礎年金番号通知書", "会社の健康保険加入予定が分かる資料", "海外住所・滞在証明", "委任状"];
     const CONTACT_NAMES = ["市役所・区役所", "年金事務所", "税務署", "健康保険組合", "銀行", "野村證券", "楽天証券", "生命保険会社", "医療保険会社", "不動産会社", "引越し業者", "携帯会社", "車販売店", "自動車保険会社", "警察署・免許センター"];
 
-    const QUICK_CHECK_TITLES = ["日本円の現金を確保", "銀行キャッシュカードが使えるか確認", "転入届を提出", "住民票を登録", "マイナンバーカードの住所変更", "マイナンバーカードの継続利用手続き", "会社の健康保険に入るか確認", "空白期間がある場合、国民健康保険の加入を確認", "厚生年金加入日を確認", "空白期間がある場合、国民年金の手続きを確認", "住民票を数通取得", "運転免許証の住所変更", "日本の銀行口座の住所変更", "野村證券の登録住所・居住者区分を確認", "楽天証券の住所・電話番号・マイナンバーを更新", "生命保険の住所変更", "医療保険の住所変更"];
-    const QUICK_CITY_TITLES = ["転入届を提出", "住民票を登録", "マイナンバーカードの住所変更", "マイナンバーカードの継続利用手続き", "空白期間がある場合、国民健康保険の加入を確認", "空白期間がある場合、国民年金の手続きを確認", "住民票を数通取得"];
+    const QUICK_CHECK_TITLES = ["日本円の現金を確保", "銀行キャッシュカードが使えるか確認", "転入届を提出", "住民票を登録", "マイナンバーカードの住所変更", "マイナンバーカードの継続利用手続き", "会社の健康保険に入るか確認", "空白期間がある場合、国民健康保険の加入を確認", "厚生年金加入日を確認", "空白期間がある場合、国民年金の手続きを確認", "住民票を数通取得", "戸籍謄本を取る", "運転免許証の住所変更", "日本の銀行口座の住所変更", "八十二長野銀行の口座開設", "野村證券の登録住所・居住者区分を確認", "楽天証券の住所・電話番号・マイナンバーを更新", "生命保険の住所変更", "医療保険の住所変更"];
+    const QUICK_CITY_TITLES = ["転入届を提出", "住民票を登録", "マイナンバーカードの住所変更", "マイナンバーカードの継続利用手続き", "空白期間がある場合、国民健康保険の加入を確認", "空白期間がある場合、国民年金の手続きを確認", "住民票を数通取得", "戸籍謄本を取る"];
     const TASK_SEEDS = [
       ["帰国当日〜3日以内", ["最初に住む場所へ到着", "郵便物を受け取れる住所を確認", "住民登録できる住所か確認", "家族・会社・重要連絡先へ帰国報告", "荷物の到着予定を確認", "別送品の通関・配送状況を確認", "日本で使うスマホ回線を開通", "SMS認証できるか確認", "通話発信できるか確認", "0120・0800・0570・一般番号への発信可否を確認", "Wi-Fi環境を確保", "日本円の現金を確保", "日本のクレジットカードが使えるか確認", "銀行キャッシュカードが使えるか確認", "PayPay、楽天ペイ、Suica等を再設定", "海外カードの利用停止・継続を確認"]],
       ["14日以内", ["転入届を提出", "住民票を登録", "世帯主・世帯構成を確認", "住民票を数通取得", "住民票記載事項証明書が必要か確認", "マイナンバーカードの住所変更", "マイナンバーカードの継続利用手続き", "電子証明書の有効性を確認", "署名用電子証明書のパスワードを確認", "利用者証明用電子証明書のパスワードを確認", "マイナポータルにログインできるか確認", "カード失効時は再申請", "会社の健康保険に入るか確認", "空白期間がある場合、国民健康保険の加入を確認", "保険証または資格確認書の受取方法を確認", "マイナ保険証の利用登録を確認", "扶養に入れる家族がいる場合、会社へ確認", "厚生年金加入日を確認", "空白期間がある場合、国民年金の手続きを確認", "基礎年金番号を確認", "配偶者の第3号被保険者該当性を確認", "海外任意加入期間がある場合、年金記録を確認", "実印を用意", "印鑑登録", "印鑑証明書を取得", "戸籍謄本が必要か確認", "戸籍附票が必要か確認", "課税証明書・非課税証明書の発行可否を確認", "納税証明書の発行可否を確認", "児童手当の対象有無を確認", "子ども医療費助成を確認", "保育園申請時期を確認", "妊娠中の場合、母子健康手帳・妊婦健診補助券を確認", "予防接種履歴を自治体に確認", "小児科・産婦人科を探す", "ごみ分別ルールを確認", "指定ごみ袋を購入", "粗大ごみの出し方を確認", "ハザードマップを確認", "避難所を確認", "自治会・町内会の有無を確認"]],
@@ -842,6 +837,16 @@
         });
         migrations.addJun2026TasksV1 = true;
       }
+      [
+        { title: "八十二長野銀行の口座開設", timing: "1〜2週間以内" },
+        { title: "戸籍謄本を取る", timing: "14日以内" }
+      ].forEach(({ title, timing }) => {
+        if (!nextState.tasks.some(task => task.title === title)) {
+          const t = buildTask(title, timing, nextTaskId(nextState.tasks));
+          t.priority = "A";
+          nextState.tasks.push(t);
+        }
+      });
       nextState.migrations = migrations;
       return nextState;
     }
@@ -1457,7 +1462,7 @@
         if (doneRank) return doneRank;
         return quickMissionScore(a) - quickMissionScore(b);
       });
-      document.getElementById("quickChecklist").innerHTML = shownTasks.map(task => {
+      const taskRows = shownTasks.map(task => {
         const done = task.status === "完了";
         return `<label class="quick-check-item ${done ? "done" : ""}">
           <input type="checkbox" ${done ? "checked" : ""} onchange="toggleQuickDone('${task.id}')" aria-label="${esc(task.title)}をクリア">
@@ -1469,6 +1474,12 @@
           <span class="quick-check-complete">${done ? "✓ クリア" : ""}</span>
         </label>`;
       }).join("") || `<div class="empty">該当するミッションはありません。</div>`;
+      const addRow = `<div class="quick-add-row">
+        <span class="quick-add-icon" aria-hidden="true">＋</span>
+        <input type="text" id="quickAddInput" placeholder="TODOを追記..." onkeydown="if(event.key==='Enter') quickAddTask()" aria-label="TODOを追記">
+        <button type="button" class="primary" onclick="quickAddTask()">追加</button>
+      </div>`;
+      document.getElementById("quickChecklist").innerHTML = taskRows + addRow;
     }
 
     function toggleQuickDone(taskId) {
