@@ -1297,7 +1297,11 @@
         saveShareSettings();
         return applied;
       } catch (e) {
-        setSyncStatus(e.message || "共有データの読み込みに失敗しました", "error");
+        setSyncStatus(
+          options.auto ? "自動同期に失敗しました。GAS URL、デプロイ設定、アクセス権限を確認してください。" : (e.message || "共有データの読み込みに失敗しました"),
+          "error",
+          { toast: !options.auto }
+        );
         return false;
       }
     }
