@@ -1208,11 +1208,8 @@
       const differentUser = incoming.lastUpdatedBy && state.lastUpdatedBy && incoming.lastUpdatedBy !== state.lastUpdatedBy;
       if (!options.force) {
         if (options.auto) {
-          if (localIsNewer) {
-            setSyncStatus("この端末の方が新しいため、自動読み込みを見送りました", "warn", { toast: false });
-            return false;
-          }
-          if (sameVersion) return false;
+          // 自動同期はマージなので常に適用（タイムスタンプ比較でスキップしない）
+          if (sameVersion && !differentUser) return false;
         } else {
           if (sharedIsNewer) {
             if (differentUser) alert("別の人が更新した可能性があります。共有データを読み込む前に、現在のデータを書き出してバックアップすることをおすすめします。");
