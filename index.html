@@ -930,6 +930,7 @@
     let detailMissionMode = "open";
     let detailVisibleCount = 20;
     let syncTimer = null;
+    let noteDebounceTimer = null;
 
     function defaultShareSettings() {
       return {
@@ -1315,19 +1316,10 @@
 
     async function saveProgressByJsonp(data) {
       const payload = JSON.stringify(data);
-      const urlLength = estimateJsonpUrlLength("save", { payload });
-      console.log("payload文字数", payload.length);
-      console.log("保存URL長", urlLength);
       try {
-        const result = await requestGas("save", { payload });
-        console.log("GASレスポンス", result);
-        console.log("共有保存成功", true);
-        return result;
+        return await requestGas("save", { payload });
       } catch (e) {
-        console.error("共有保存失敗", e);
-        console.error("エラー内容", e.message || e);
-        console.error("GASから返ったerror", e.message || e);
-        throw new Error("共有保存に失敗しました。payloadが長すぎる可能性があります。");
+        throw new Error(e.message || "共有保存に失敗しました");
       }
     }
 
@@ -1750,7 +1742,10 @@
       const task = findTask(id);
       task.note = note;
       if (!note) { state.syncForceTaskIds = [...new Set([...(state.syncForceTaskIds || []), id])]; }
-      save(); renderHeader(); renderDashboard();
+      // localStorageには即保存、GAS保存は1秒後にまとめて送る（1文字ごとのGAS通信を防ぐ）
+      save({ sync: false }); renderHeader(); renderDashboard();
+      if (noteDebounceTimer) clearTimeout(noteDebounceTimer);
+      noteDebounceTimer = setTimeout(() => save({ touch: false }), 1000);
     }
     function deleteTask(id) {
       if (!confirm("このミッションを削除しますか？")) return;
