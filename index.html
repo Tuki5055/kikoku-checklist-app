@@ -706,6 +706,7 @@
   <script>
     const STORAGE_KEY = "return-japan-checklist-state-v1";
     const USER_NAME_KEY = "return-japan-checklist-user-name-v1";
+    const SETTINGS_KEY = "return-japan-checklist-settings-v1"; // GAS URL等の設定を独立保存
     const TIMINGS = ["帰国当日〜3日以内", "14日以内", "1〜2週間以内", "1か月以内", "1〜2か月以内", "3〜6か月以内"];
     const CATEGORIES = ["住所・市役所", "マイナンバー", "健康保険", "年金", "銀行", "証券", "保険", "税金", "携帯・通信", "住居", "車", "子育て", "仕事", "資格・学習", "生活用品", "電話・問い合わせ", "重要書類"];
     const PRIORITIES = ["S", "A", "B", "C"];
@@ -943,13 +944,31 @@
       };
     }
 
+    // GAS URL・同期設定を独立したキーに保存・読み込み（iOSのlocalStorage消去対策）
+    function loadPersistentSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+        if (saved) return saved;
+      } catch (e) {}
+      return {};
+    }
+
+    function savePersistentSettings(settings) {
+      const keys = ["gasEndpointUrl", "syncEnabled", "autoLoadIntervalSec", "mode"];
+      const toSave = {};
+      keys.forEach(k => { if (settings[k] !== undefined) toSave[k] = settings[k]; });
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(toSave));
+    }
+
     function getUserName() {
       return localStorage.getItem(USER_NAME_KEY) || state?.lastUpdatedBy || "未設定";
     }
 
     function normalizeState(input) {
       const initial = input || {};
-      const shareSettings = { ...defaultShareSettings(), ...(initial.shareSettings || {}) };
+      // 独立保存した設定を優先してマージ（iOSでstate消えても設定を復元）
+      const persistentSettings = loadPersistentSettings();
+      const shareSettings = { ...defaultShareSettings(), ...(initial.shareSettings || {}), ...persistentSettings };
       const nextState = {
         ...initial,
         tasks: Array.isArray(initial.tasks) && initial.tasks.length ? initial.tasks : buildInitialTasks(),
@@ -1007,6 +1026,7 @@
 
     function saveShareSettings() {
       state.shareSettings = { ...defaultShareSettings(), ...(state.shareSettings || {}) };
+      savePersistentSettings(state.shareSettings); // 独立キーにも保存
       save({ sync: false, touch: false });
       renderShareSettings();
     }
