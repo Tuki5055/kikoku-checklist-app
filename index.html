@@ -1888,6 +1888,26 @@
       render();
     }
 
+    // URLハッシュからGAS設定を復元（例: #gas=https://...&sync=true）
+    (function applyHashSettings() {
+      try {
+        const hash = location.hash.slice(1);
+        if (!hash) return;
+        const params = new URLSearchParams(hash);
+        const gasUrl = params.get("gas");
+        const sync = params.get("sync");
+        if (gasUrl) {
+          state.shareSettings.gasEndpointUrl = gasUrl;
+          if (sync === "true") {
+            state.shareSettings.syncEnabled = true;
+            state.shareSettings.mode = "gas";
+          }
+          savePersistentSettings(state.shareSettings);
+          save({ sync: false, touch: false });
+        }
+      } catch (e) {}
+    })();
+
     initControls();
     render();
     startAutoSync();
