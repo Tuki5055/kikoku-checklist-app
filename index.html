@@ -624,6 +624,23 @@
       </div>
     </details>
 
+    <details class="utility-panel">
+      <summary><h2>お土産リスト</h2></summary>
+      <div class="panel-body">
+        <p class="section-help">チェックすると購入済みになります。帰国後は不要になったら削除できます。</p>
+        <div id="souvenirProgress" class="quick-progress-line" style="margin-bottom:10px;"></div>
+        <div class="quick-filter-bar" id="souvenirFilterBar">
+          <button type="button" data-sv="open" onclick="setSouvenirFilter('open')">未購入だけ</button>
+          <button type="button" data-sv="all" onclick="setSouvenirFilter('all')">全部</button>
+        </div>
+        <div class="quick-check-list" id="souvenirList"></div>
+        <div class="quick-add-container">
+          <input type="text" id="souvenirAddInput" placeholder="追加するお土産を入力..." onkeydown="if(event.key==='Enter') addSouvenir()">
+          <button type="button" class="primary" onclick="addSouvenir()">＋ 追加</button>
+        </div>
+      </div>
+    </details>
+
     <details class="utility-panel" id="adminMenu">
       <summary><h2>設定・バックアップ</h2></summary>
       <div class="panel-body compact-admin">
@@ -715,6 +732,35 @@
     const IMPORTANT_DOCS = ["パスポート", "航空券控え・搭乗券", "マイナンバーカード", "運転免許証", "戸籍謄本", "戸籍附票", "年金手帳または基礎年金番号通知書", "海外勤務の在職証明", "給与明細", "源泉徴収票", "海外銀行の残高証明", "海外送金履歴", "証券口座の取引履歴", "保険証券", "医療記録", "予防接種記録", "婚姻・出生関係書類", "賃貸・住宅関係書類", "印鑑", "実印候補の印鑑"];
     const CITY_DOCS = ["パスポート", "航空券控え・搭乗券", "マイナンバーカード", "運転免許証", "戸籍謄本", "戸籍附票", "印鑑", "実印候補の印鑑", "年金手帳または基礎年金番号通知書", "会社の健康保険加入予定が分かる資料", "海外住所・滞在証明", "委任状"];
     const CONTACT_NAMES = ["市役所・区役所", "年金事務所", "税務署", "健康保険組合", "銀行", "野村證券", "楽天証券", "生命保険会社", "医療保険会社", "不動産会社", "引越し業者", "携帯会社", "車販売店", "自動車保険会社", "警察署・免許センター"];
+    const SOUVENIR_SEEDS = [
+      { name: "モノポリーペナン", done: false },
+      { name: "スタバのペナンカップ", done: false },
+      { name: "ホンギャプ", done: false },
+      { name: "中華被り物", done: false },
+      { name: "タイガーバーム", done: false },
+      { name: "東京に行くTシャツ", done: false },
+      { name: "chageeのショッピング袋", done: false },
+      { name: "ボーティーの茶葉（船便・手持ち用）", done: false },
+      { name: "オリコピ", done: false },
+      { name: "ドライフルーツ", done: false },
+      { name: "お菓子", done: false },
+      { name: "豆屋さんで買う", done: false },
+      { name: "バカコーヒー", done: false },
+      { name: "TWG", done: false },
+      { name: "でまちゃんグッズ", done: true },
+      { name: "オリコピキーホルダー", done: true },
+      { name: "ハンギョドン", done: true },
+      { name: "鍋敷", done: true },
+      { name: "ナマコせっけん", done: true },
+      { name: "おとんTシャツ（小さいかも）", done: true },
+      { name: "豆腐花のキーホルダー", done: true },
+      { name: "katamの鍋", done: true },
+      { name: "海山行こうTシャツ", done: true },
+      { name: "ゆっちのお土産＆スカート", done: true },
+      { name: "おばちーエプロン", done: true },
+      { name: "靴下", done: true },
+      { name: "napelバック", done: true }
+    ];
 
     const QUICK_CHECK_TITLES = ["日本円の現金を確保", "銀行キャッシュカードが使えるか確認", "転入届を提出", "住民票を登録", "マイナンバーカードの住所変更", "マイナンバーカードの継続利用手続き", "会社の健康保険に入るか確認", "空白期間がある場合、国民健康保険の加入を確認", "厚生年金加入日を確認", "空白期間がある場合、国民年金の手続きを確認", "住民票を数通取得", "戸籍謄本を取る", "運転免許証の住所変更", "日本の銀行口座の住所変更", "八十二長野銀行の口座開設", "野村證券の登録住所・居住者区分を確認", "楽天証券の住所・電話番号・マイナンバーを更新", "生命保険の住所変更", "医療保険の住所変更"];
     const QUICK_CITY_TITLES = ["転入届を提出", "住民票を登録", "マイナンバーカードの住所変更", "マイナンバーカードの継続利用手続き", "空白期間がある場合、国民健康保険の加入を確認", "空白期間がある場合、国民年金の手続きを確認", "住民票を数通取得", "戸籍謄本を取る"];
@@ -929,6 +975,7 @@
     let quickNoteOpenId = "";
     let detailMissionMode = "open";
     let detailVisibleCount = 20;
+    let souvenirFilterMode = "open";
     let syncTimer = null;
     let noteDebounceTimer = null;
 
@@ -975,6 +1022,7 @@
         tasks: Array.isArray(initial.tasks) && initial.tasks.length ? initial.tasks : buildInitialTasks(),
         documents: Array.isArray(initial.documents) ? initial.documents : IMPORTANT_DOCS.map((name, i) => ({ id: "doc-" + i, name, done: false, note: "" })),
         contacts: Array.isArray(initial.contacts) ? initial.contacts : buildInitialState().contacts,
+        souvenirs: Array.isArray(initial.souvenirs) ? initial.souvenirs : SOUVENIR_SEEDS.map((s, i) => ({ id: "sv-" + i, name: s.name, done: s.done })),
         lastUpdatedAt: initial.lastUpdatedAt || new Date().toISOString(),
         lastUpdatedBy: initial.lastUpdatedBy || localStorage.getItem(USER_NAME_KEY) || "未設定",
         shareSettings
@@ -1435,6 +1483,7 @@
       renderDashboard();
       renderTasks();
       renderCity();
+      renderSouvenirs();
     }
 
     function renderHeader() {
@@ -1797,6 +1846,58 @@
       save({ sync: true });
       hideTaskForm();
       render();
+    }
+
+    function setSouvenirFilter(mode) {
+      souvenirFilterMode = mode;
+      renderSouvenirs();
+    }
+
+    function renderSouvenirs() {
+      const all = state.souvenirs || [];
+      const done = all.filter(s => s.done).length;
+      const total = all.length;
+      document.getElementById("souvenirProgress").innerHTML =
+        `<strong>お土産進捗：${done} / ${total} 購入済み</strong>`;
+      document.querySelectorAll("#souvenirFilterBar button").forEach(b =>
+        b.classList.toggle("active", b.dataset.sv === souvenirFilterMode));
+      const shown = souvenirFilterMode === "open" ? all.filter(s => !s.done) : all;
+      document.getElementById("souvenirList").innerHTML = shown.map(s => `
+        <label class="quick-check-item ${s.done ? "done" : ""}">
+          <input type="checkbox" ${s.done ? "checked" : ""} onchange="toggleSouvenir('${s.id}')" aria-label="${esc(s.name)}">
+          <span class="quick-check-main ${s.done ? "" : ""}">${esc(s.name)}</span>
+          <span class="quick-check-meta"></span>
+          <span class="quick-check-complete">${s.done ? "✓ 購入済み" : ""}</span>
+        </label>
+        <button type="button" class="small danger" style="margin:0 0 4px 34px" onclick="deleteSouvenir('${s.id}')">削除</button>
+      `).join("") || `<div class="empty">該当するアイテムはありません。</div>`;
+    }
+
+    function toggleSouvenir(id) {
+      const s = state.souvenirs.find(s => s.id === id);
+      if (!s) return;
+      s.done = !s.done;
+      save({ sync: true });
+      renderSouvenirs();
+    }
+
+    function addSouvenir() {
+      const input = document.getElementById("souvenirAddInput");
+      if (!input) return;
+      const name = input.value.trim();
+      if (!name) return;
+      const id = "sv-" + Date.now();
+      state.souvenirs = state.souvenirs || [];
+      state.souvenirs.push({ id, name, done: false });
+      save({ sync: true });
+      input.value = "";
+      renderSouvenirs();
+    }
+
+    function deleteSouvenir(id) {
+      state.souvenirs = (state.souvenirs || []).filter(s => s.id !== id);
+      save({ sync: true });
+      renderSouvenirs();
     }
 
     function renderCity() {
