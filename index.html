@@ -1874,11 +1874,11 @@
         b.classList.toggle("active", b.dataset.sv === souvenirFilterMode));
       const shown = souvenirFilterMode === "open" ? all.filter(s => !s.done) : all;
       document.getElementById("souvenirList").innerHTML = shown.map(s => `
-        <div class="quick-check-item ${s.done ? "done" : ""}">
+        <div class="quick-check-item ${s.done ? "done" : ""}" style="grid-template-columns:34px 1fr auto auto;">
           <input type="checkbox" ${s.done ? "checked" : ""} onchange="toggleSouvenir('${s.id}')" aria-label="${esc(s.name)}">
           <span class="quick-check-main">${esc(s.name)}</span>
-          <span class="quick-check-complete">${s.done ? "✓ 購入済み" : ""}</span>
-          <button type="button" class="small danger" style="min-height:26px;padding:2px 8px;font-size:12px;border-radius:8px;" onclick="deleteSouvenir('${s.id}')">×</button>
+          <span class="quick-check-complete" style="font-size:12px;">${s.done ? "✓" : ""}</span>
+          <button type="button" onclick="deleteSouvenir('${s.id}')" style="min-height:24px;padding:0 8px;font-size:12px;border-radius:8px;border:1px solid #f0b8bf;color:#c43d4b;background:#fff;cursor:pointer;">×</button>
         </div>
       `).join("") || `<div class="empty">該当するアイテムはありません。</div>`;
     }
