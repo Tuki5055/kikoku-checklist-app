@@ -1236,13 +1236,19 @@
           contactProgress[contact.id] = progress;
         }
       });
+      const souvenirs = {};
+      (state.souvenirs || []).forEach(s => {
+        souvenirs[s.id] = { name: s.name, done: Boolean(s.done) };
+      });
       return {
         version: 1,
         lastUpdatedAt: state.lastUpdatedAt,
         lastUpdatedBy: state.lastUpdatedBy,
         tasks: taskProgress,
         documents: documentProgress,
-        contacts: contactProgress
+        contacts: contactProgress,
+        souvenirs,
+        deletedSouvenirIds: state.deletedSouvenirIds || []
       };
     }
 
@@ -1282,6 +1288,19 @@
           if (typeof update[key] === "string") contact[key] = update[key];
         });
       });
+      // お土産マージ（IDベースで追加・更新・削除）
+      const souvenirProgress = sharedState.souvenirs || {};
+      const deletedIds = new Set(sharedState.deletedSouvenirIds || []);
+      state.souvenirs = (state.souvenirs || []).filter(s => !deletedIds.has(s.id));
+      Object.entries(souvenirProgress).forEach(([id, data]) => {
+        if (deletedIds.has(id)) return;
+        const existing = state.souvenirs.find(s => s.id === id);
+        if (existing) {
+          existing.done = Boolean(data.done);
+        } else {
+          state.souvenirs.push({ id, name: data.name || id, done: Boolean(data.done) });
+        }
+      });
       state.lastUpdatedAt = sharedState.lastUpdatedAt || state.lastUpdatedAt;
       state.lastUpdatedBy = sharedState.lastUpdatedBy || state.lastUpdatedBy;
     }
@@ -1314,7 +1333,13 @@
         mergeProgressState(sharedState);
       } else {
         const currentSettings = getShareSettings();
-        state = normalizeState({ ...incoming, shareSettings: { ...currentSettings, ...(incoming.shareSettings || {}) } });
+        const localSouvenirs = state.souvenirs || [];
+        const merged = normalizeState({ ...incoming, shareSettings: { ...currentSettings, ...(incoming.shareSettings || {}) } });
+        // 古いフォーマットで上書きされてもローカルのお土産を保持する
+        const mergedIds = new Set((merged.souvenirs || []).map(s => s.id));
+        const localOnly = localSouvenirs.filter(s => !mergedIds.has(s.id));
+        merged.souvenirs = [...(merged.souvenirs || []), ...localOnly];
+        state = merged;
       }
       save({ sync: false, touch: false });
       render();
@@ -1442,6 +1467,7 @@
         state.syncForceTaskIds = [];
         state.syncForceDocIds = [];
         state.syncForceContactIds = [];
+        state.deletedSouvenirIds = [];
         setSyncStatus("共有データを保存しました", "ok");
         saveShareSettings();
       } catch (e) {
@@ -1924,6 +1950,7 @@
 
     function deleteSouvenir(id) {
       state.souvenirs = (state.souvenirs || []).filter(s => s.id !== id);
+      state.deletedSouvenirIds = [...new Set([...(state.deletedSouvenirIds || []), id])];
       save({ sync: true });
       renderSouvenirs();
     }
