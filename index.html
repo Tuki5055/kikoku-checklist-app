@@ -1889,7 +1889,8 @@
       if (chip) chip.textContent = `${done} / ${total} 購入済み`;
       document.querySelectorAll("#souvenirFilterBar button").forEach(b =>
         b.classList.toggle("active", b.dataset.sv === souvenirFilterMode));
-      const shown = souvenirFilterMode === "open" ? all.filter(s => !s.done) : all;
+      const shown = (souvenirFilterMode === "open" ? all.filter(s => !s.done) : all)
+        .slice().sort((a, b) => Number(a.done) - Number(b.done));
       document.getElementById("souvenirList").innerHTML = shown.map(s => `
         <div class="sv-item ${s.done ? "done" : ""}">
           <input type="checkbox" ${s.done ? "checked" : ""} onchange="toggleSouvenir('${s.id}')" aria-label="${esc(s.name)}">
