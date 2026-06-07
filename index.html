@@ -523,7 +523,7 @@
       .subtitle { display: none; }
       .return-date { margin-top: 3px; font-size: 13px; }
       .header-meta { margin-top: 6px; gap: 6px; }
-      .header-meta .map-pill:not(#shareModeChip) { display: none; }
+      .header-meta .map-pill:not(#shareModeChip):not(#souvenirChip) { display: none; }
       .map-pill { padding: 3px 7px; font-size: 11px; }
       .header-inner, main { padding: 12px; }
       button { width: auto; }
@@ -1874,13 +1874,12 @@
         b.classList.toggle("active", b.dataset.sv === souvenirFilterMode));
       const shown = souvenirFilterMode === "open" ? all.filter(s => !s.done) : all;
       document.getElementById("souvenirList").innerHTML = shown.map(s => `
-        <label class="quick-check-item ${s.done ? "done" : ""}">
+        <div class="quick-check-item ${s.done ? "done" : ""}">
           <input type="checkbox" ${s.done ? "checked" : ""} onchange="toggleSouvenir('${s.id}')" aria-label="${esc(s.name)}">
-          <span class="quick-check-main ${s.done ? "" : ""}">${esc(s.name)}</span>
-          <span class="quick-check-meta"></span>
+          <span class="quick-check-main">${esc(s.name)}</span>
           <span class="quick-check-complete">${s.done ? "✓ 購入済み" : ""}</span>
-        </label>
-        <button type="button" class="small danger" style="margin:0 0 4px 34px" onclick="deleteSouvenir('${s.id}')">削除</button>
+          <button type="button" class="small danger" style="min-height:26px;padding:2px 8px;font-size:12px;border-radius:8px;" onclick="deleteSouvenir('${s.id}')">×</button>
+        </div>
       `).join("") || `<div class="empty">該当するアイテムはありません。</div>`;
     }
 
