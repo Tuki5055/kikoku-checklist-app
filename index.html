@@ -553,6 +553,7 @@
             <span class="map-pill">現在地：<span id="headerCurrentLevel">日本生活 起動準備中</span></span>
             <span class="map-pill">クリア済み：<span id="headerClearCount">0 / 0</span></span>
             <span class="map-pill" id="shareModeChip">保存：この端末のみ</span>
+            <a class="map-pill" id="souvenirChip" onclick="openSouvenirPanel()" style="cursor:pointer;text-decoration:none;">🎁 お土産：<span id="headerSouvenirCount">0 / 0</span></a>
           </div>
         </div>
         
@@ -624,7 +625,7 @@
       </div>
     </details>
 
-    <details class="utility-panel">
+    <details class="utility-panel" id="souvenirPanel">
       <summary><h2>お土産リスト</h2></summary>
       <div class="panel-body">
         <p class="section-help">チェックすると購入済みになります。帰国後は不要になったら削除できます。</p>
@@ -975,7 +976,7 @@
     let quickNoteOpenId = "";
     let detailMissionMode = "open";
     let detailVisibleCount = 20;
-    let souvenirFilterMode = "open";
+    let souvenirFilterMode = "all";
     let syncTimer = null;
     let noteDebounceTimer = null;
 
@@ -1848,6 +1849,14 @@
       render();
     }
 
+    function openSouvenirPanel() {
+      const panel = document.getElementById("souvenirPanel");
+      if (panel) {
+        panel.open = true;
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
     function setSouvenirFilter(mode) {
       souvenirFilterMode = mode;
       renderSouvenirs();
@@ -1859,6 +1868,8 @@
       const total = all.length;
       document.getElementById("souvenirProgress").innerHTML =
         `<strong>お土産進捗：${done} / ${total} 購入済み</strong>`;
+      const chip = document.getElementById("headerSouvenirCount");
+      if (chip) chip.textContent = `${done} / ${total} 購入済み`;
       document.querySelectorAll("#souvenirFilterBar button").forEach(b =>
         b.classList.toggle("active", b.dataset.sv === souvenirFilterMode));
       const shown = souvenirFilterMode === "open" ? all.filter(s => !s.done) : all;
