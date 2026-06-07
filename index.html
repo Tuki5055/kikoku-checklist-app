@@ -422,6 +422,23 @@
     .toast.ok { background: var(--ok); }
     .toast.warn { background: var(--warn); }
     .toast.error { background: var(--danger); }
+    .sv-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 10px 12px;
+      border: 1px solid #dbe7da;
+      border-radius: 14px;
+      background: rgba(255,255,255,.78);
+      box-shadow: 0 8px 22px rgba(47,80,68,.06);
+    }
+    .sv-item.done { opacity: .68; background: #f2f6f2; }
+    .sv-item input[type="checkbox"] { width: 24px; height: 24px; flex-shrink: 0; accent-color: var(--brand); }
+    .sv-item .sv-name { flex: 1; font-weight: 800; overflow-wrap: anywhere; }
+    .sv-item.done .sv-name { text-decoration: line-through; }
+    .sv-item .sv-done-label { color: var(--ok); font-weight: 900; font-size: 12px; white-space: nowrap; }
+    .sv-item .sv-del { flex-shrink: 0; min-height: 26px; padding: 0 8px; font-size: 12px; border-radius: 8px; border: 1px solid #f0b8bf; color: #c43d4b; background: #fff; cursor: pointer; }
     .quick-add-row {
       display: grid;
       grid-template-columns: 34px minmax(0, 1fr) 120px auto;
@@ -1874,11 +1891,11 @@
         b.classList.toggle("active", b.dataset.sv === souvenirFilterMode));
       const shown = souvenirFilterMode === "open" ? all.filter(s => !s.done) : all;
       document.getElementById("souvenirList").innerHTML = shown.map(s => `
-        <div class="quick-check-item ${s.done ? "done" : ""}" style="grid-template-columns:34px 1fr auto auto;">
+        <div class="sv-item ${s.done ? "done" : ""}">
           <input type="checkbox" ${s.done ? "checked" : ""} onchange="toggleSouvenir('${s.id}')" aria-label="${esc(s.name)}">
-          <span class="quick-check-main">${esc(s.name)}</span>
-          <span class="quick-check-complete" style="font-size:12px;">${s.done ? "✓" : ""}</span>
-          <button type="button" onclick="deleteSouvenir('${s.id}')" style="min-height:24px;padding:0 8px;font-size:12px;border-radius:8px;border:1px solid #f0b8bf;color:#c43d4b;background:#fff;cursor:pointer;">×</button>
+          <span class="sv-name">${esc(s.name)}</span>
+          <span class="sv-done-label">${s.done ? "✓ 購入済み" : ""}</span>
+          <button type="button" class="sv-del" onclick="deleteSouvenir('${s.id}')">×</button>
         </div>
       `).join("") || `<div class="empty">該当するアイテムはありません。</div>`;
     }
