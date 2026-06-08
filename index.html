@@ -1175,7 +1175,7 @@
     }
 
     function updateAutoLoadInterval(value) {
-      const seconds = Math.max(15, Number(value) || 60);
+      const seconds = Math.max(10, Number(value) || 30);
       state.shareSettings.autoLoadIntervalSec = seconds;
       saveShareSettings();
       startAutoSync();
@@ -1492,7 +1492,7 @@
       if (syncTimer) clearInterval(syncTimer);
       const settings = getShareSettings();
       if (!settings.syncEnabled || !settings.gasEndpointUrl) return;
-      const seconds = Math.max(15, Number(settings.autoLoadIntervalSec) || 60);
+      const seconds = Math.max(10, Number(settings.autoLoadIntervalSec) || 30);
       syncTimer = setInterval(() => syncWithSharedSheet({ auto: true }), seconds * 1000);
     }
 
@@ -2071,6 +2071,14 @@
       setSyncStatus("自動同期ON。共有データを確認中...", "warn", { toast: false });
       syncWithSharedSheet({ auto: true });
     }
+
+    // タブ/アプリに戻った瞬間に即同期
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        const s = getShareSettings();
+        if (s.syncEnabled && s.gasEndpointUrl) syncWithSharedSheet({ auto: true });
+      }
+    });
   </script>
 </body>
 </html>
