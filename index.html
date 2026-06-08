@@ -549,7 +549,7 @@
       .subtitle { display: none; }
       .return-date { margin-top: 3px; font-size: 13px; }
       .header-meta { margin-top: 6px; gap: 6px; }
-      .header-meta .map-pill:not(#shareModeChip):not(#souvenirChip):not(#missionChip) { display: none; }
+      .header-meta .map-pill:not(#souvenirChip):not(#missionChip) { display: none; }
       .map-pill { padding: 3px 7px; font-size: 11px; }
       .header-inner, main { padding: 12px; }
       button { width: auto; }
@@ -578,7 +578,6 @@
           <div class="header-meta">
             <span class="map-pill">現在地：<span id="headerCurrentLevel">日本生活 起動準備中</span></span>
             <span class="map-pill">クリア済み：<span id="headerClearCount">0 / 0</span></span>
-            <span class="map-pill" id="shareModeChip">保存：この端末のみ</span>
             <a class="map-pill" id="souvenirChip" onclick="openSouvenirPanel()" style="cursor:pointer;text-decoration:none;">🎁 お土産：<span id="headerSouvenirCount">0 / 0</span></a>
             <a class="map-pill" id="missionChip" onclick="openMissionPanel()" style="cursor:pointer;text-decoration:none;">📋 ミッション</a>
           </div>
@@ -1144,10 +1143,6 @@
       const syncSelect = document.getElementById("syncEnabled");
       const intervalInput = document.getElementById("autoLoadIntervalSec");
       const shareOn = settings.syncEnabled && settings.gasEndpointUrl;
-      if (document.getElementById("shareModeChip")) {
-        const lastSync = settings.lastSyncAt ? "同期：" + settings.lastSyncAt : "未同期";
-        document.getElementById("shareModeChip").textContent = lastSync;
-      }
       if (userNameInput) userNameInput.value = localStorage.getItem(USER_NAME_KEY) || state.lastUpdatedBy || "";
       if (gasInput) gasInput.value = settings.gasEndpointUrl || "";
       if (syncSelect) syncSelect.value = String(Boolean(settings.syncEnabled));
