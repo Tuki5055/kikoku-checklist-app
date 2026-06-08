@@ -1144,7 +1144,10 @@
       const syncSelect = document.getElementById("syncEnabled");
       const intervalInput = document.getElementById("autoLoadIntervalSec");
       const shareOn = settings.syncEnabled && settings.gasEndpointUrl;
-      if (document.getElementById("shareModeChip")) document.getElementById("shareModeChip").textContent = shareOn ? "保存：Google共有ON" : (settings.mode === "manual" ? "保存：手動共有" : "保存：この端末のみ");
+      if (document.getElementById("shareModeChip")) {
+        const lastSync = settings.lastSyncAt ? "同期：" + settings.lastSyncAt : "未同期";
+        document.getElementById("shareModeChip").textContent = lastSync;
+      }
       if (userNameInput) userNameInput.value = localStorage.getItem(USER_NAME_KEY) || state.lastUpdatedBy || "";
       if (gasInput) gasInput.value = settings.gasEndpointUrl || "";
       if (syncSelect) syncSelect.value = String(Boolean(settings.syncEnabled));
