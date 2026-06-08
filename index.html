@@ -549,7 +549,7 @@
       .subtitle { display: none; }
       .return-date { margin-top: 3px; font-size: 13px; }
       .header-meta { margin-top: 6px; gap: 6px; }
-      .header-meta .map-pill:not(#shareModeChip):not(#souvenirChip) { display: none; }
+      .header-meta .map-pill:not(#shareModeChip):not(#souvenirChip):not(#missionChip) { display: none; }
       .map-pill { padding: 3px 7px; font-size: 11px; }
       .header-inner, main { padding: 12px; }
       button { width: auto; }
@@ -580,6 +580,7 @@
             <span class="map-pill">クリア済み：<span id="headerClearCount">0 / 0</span></span>
             <span class="map-pill" id="shareModeChip">保存：この端末のみ</span>
             <a class="map-pill" id="souvenirChip" onclick="openSouvenirPanel()" style="cursor:pointer;text-decoration:none;">🎁 お土産：<span id="headerSouvenirCount">0 / 0</span></a>
+            <a class="map-pill" id="missionChip" onclick="openMissionPanel()" style="cursor:pointer;text-decoration:none;">📋 ミッション</a>
           </div>
         </div>
         
@@ -621,7 +622,7 @@
       </details>
     </section>
 
-    <details class="utility-panel detail-mission-panel">
+    <details class="utility-panel detail-mission-panel" id="detailMissionPanel">
       <summary><h2>詳細ミッション一覧</h2></summary>
       <div class="panel-body">
         <p class="section-help">重要な手続きを種類ごとに確認できます。迷ったら「未クリア」から進めてください。</p>
@@ -1926,6 +1927,14 @@
       save({ sync: true });
       hideTaskForm();
       render();
+    }
+
+    function openMissionPanel() {
+      const panel = document.getElementById("detailMissionPanel");
+      if (panel) {
+        panel.open = true;
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
 
     function openSouvenirPanel() {
