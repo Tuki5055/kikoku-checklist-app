@@ -328,6 +328,15 @@
     .map-metric strong { display: block; font-size: 22px; line-height: 1.1; }
     .map-metric span { color: var(--muted); font-size: 12px; font-weight: 800; }
     .detail-mission-panel > summary { background: linear-gradient(90deg, #ffffff 0%, #f7fbf4 100%); }
+    .timing-group { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+    .timing-group-summary { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f4f9f3; cursor: pointer; font-weight: 800; list-style: none; gap: 8px; }
+    .timing-group-summary::-webkit-details-marker { display: none; }
+    .timing-group-summary::before { content: "▶"; font-size: 11px; color: var(--muted); transition: transform .2s; flex-shrink: 0; }
+    .timing-group[open] > .timing-group-summary::before { transform: rotate(90deg); }
+    .timing-group-label { flex: 1; font-size: 15px; }
+    .timing-group-count { font-size: 13px; color: var(--muted); font-weight: 700; white-space: nowrap; }
+    .timing-group[open] > .timing-group-summary .timing-group-count { color: var(--brand); }
+    .timing-group-body { padding: 8px; display: grid; gap: 6px; }
     .mission-search { margin-bottom: 10px; max-width: 520px; }
     .compact-admin .edit-area { margin-bottom: 12px; padding: 14px; box-shadow: none; }
     .mission-view-bar {
@@ -1758,16 +1767,41 @@
       document.getElementById(id).innerHTML = html;
     }
 
+    const TIMING_ORDER = ["帰国当日〜3日以内", "14日以内", "1〜2週間以内", "1か月以内", "1〜2か月以内", "3〜6か月以内"];
+
     function renderTasks() {
       const tasks = state.tasks.filter(taskMatches).sort((a, b) => missionSortValue(a) - missionSortValue(b));
-      const shownTasks = tasks.slice(0, detailVisibleCount);
       document.querySelectorAll("#detailMissionButtons button").forEach(button => button.classList.toggle("active", button.dataset.mode === detailMissionMode));
-      document.getElementById("taskCountLine").textContent = `${detailMissionLabel()}：${shownTasks.length} / ${tasks.length}件`;
-      document.getElementById("taskList").innerHTML = shownTasks.map(taskCard).join("") || `<div class="empty">該当するミッションはありません。</div>`;
+      document.getElementById("taskCountLine").textContent = `${detailMissionLabel()}：${tasks.length}件`;
       const more = document.getElementById("missionMore");
-      if (more) {
-        more.innerHTML = tasks.length > shownTasks.length ? `<button type="button" onclick="showMoreMissions()">さらに20件表示</button>` : "";
+      if (more) more.innerHTML = "";
+
+      if (!tasks.length) {
+        document.getElementById("taskList").innerHTML = `<div class="empty">該当するミッションはありません。</div>`;
+        return;
       }
+
+      // タイミング別グループ
+      const groups = {};
+      tasks.forEach(t => {
+        const key = TIMING_ORDER.includes(t.timing) ? t.timing : "その他";
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(t);
+      });
+      const orderedKeys = [...TIMING_ORDER, "その他"].filter(k => groups[k]);
+
+      document.getElementById("taskList").innerHTML = orderedKeys.map(timing => {
+        const items = groups[timing];
+        const doneCount = items.filter(t => t.status === "完了").length;
+        const open = doneCount < items.length; // 未完了があれば開く
+        return `<details class="timing-group" ${open ? "open" : ""}>
+          <summary class="timing-group-summary">
+            <span class="timing-group-label">${esc(timing)}</span>
+            <span class="timing-group-count">${doneCount === items.length ? "✓ 全完了" : `残り ${items.length - doneCount} / ${items.length}件`}</span>
+          </summary>
+          <div class="timing-group-body">${items.map(taskCard).join("")}</div>
+        </details>`;
+      }).join("");
     }
 
     function setDetailMissionMode(mode) {
