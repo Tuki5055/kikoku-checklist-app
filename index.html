@@ -1477,7 +1477,7 @@
         state.syncForceTaskIds = [];
         state.syncForceDocIds = [];
         state.syncForceContactIds = [];
-        state.deletedSouvenirIds = [];
+        // deletedSouvenirIdsは永続保持（消すと他端末からの復活を防げない）
         setSyncStatus("共有データを保存しました", "ok");
         saveShareSettings();
       } catch (e) {
