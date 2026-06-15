@@ -1250,6 +1250,14 @@
       (state.souvenirs || []).forEach(s => {
         souvenirs[s.id] = { name: s.name, done: Boolean(s.done) };
       });
+      const customTasks = {};
+      state.tasks.filter(t => t.quick || t.custom).forEach(t => {
+        customTasks[t.id] = {
+          title: t.title, timing: t.timing || "14日以内", priority: t.priority || "B",
+          status: t.status, note: t.note || "", today: Boolean(t.today), later: Boolean(t.later),
+          quick: Boolean(t.quick), custom: Boolean(t.custom)
+        };
+      });
       return {
         version: 1,
         lastUpdatedAt: state.lastUpdatedAt,
@@ -1258,7 +1266,9 @@
         documents: documentProgress,
         contacts: contactProgress,
         souvenirs,
-        deletedSouvenirIds: state.deletedSouvenirIds || []
+        deletedSouvenirIds: state.deletedSouvenirIds || [],
+        customTasks,
+        deletedCustomTaskIds: state.deletedCustomTaskIds || []
       };
     }
 
@@ -1297,6 +1307,30 @@
         ["generalNumberMemo", "webMemo", "beforeMemo", "resultMemo"].forEach(key => {
           if (typeof update[key] === "string") contact[key] = update[key];
         });
+      });
+      // カスタムタスクマージ（IDベースで追加・更新・削除）
+      const customTasksData = sharedState.customTasks || {};
+      const deletedCustomIds = new Set(sharedState.deletedCustomTaskIds || []);
+      state.tasks = state.tasks.filter(t => !(t.quick || t.custom) || !deletedCustomIds.has(t.id));
+      Object.entries(customTasksData).forEach(([id, data]) => {
+        if (deletedCustomIds.has(id)) return;
+        const existing = state.tasks.find(t => t.id === id);
+        if (existing) {
+          if (typeof data.status === "string") existing.status = data.status;
+          existing.today = Boolean(data.today);
+          existing.later = Boolean(data.later);
+          if (typeof data.note === "string") existing.note = data.note;
+        } else {
+          const newTask = buildTask(data.title || id, data.timing || "14日以内", id);
+          newTask.quick = Boolean(data.quick);
+          newTask.custom = Boolean(data.custom);
+          newTask.priority = data.priority || "B";
+          newTask.status = data.status || "未完了";
+          newTask.note = data.note || "";
+          newTask.today = Boolean(data.today);
+          newTask.later = Boolean(data.later);
+          state.tasks.unshift(newTask);
+        }
       });
       // お土産マージ（IDベースで追加・更新・削除）
       const souvenirProgress = sharedState.souvenirs || {};
@@ -1877,7 +1911,11 @@
     }
     function deleteTask(id) {
       if (!confirm("このミッションを削除しますか？")) return;
+      const task = state.tasks.find(t => t.id === id);
       state.tasks = state.tasks.filter(t => t.id !== id);
+      if (task && (task.quick || task.custom)) {
+        state.deletedCustomTaskIds = [...new Set([...(state.deletedCustomTaskIds || []), id])];
+      }
       save({ sync: true });
       render();
     }
@@ -1908,7 +1946,7 @@
       event.preventDefault();
       const id = document.getElementById("editId").value || "task-custom-" + Date.now();
       const existing = findTask(id);
-      const task = existing || { id, today: false, later: false };
+      const task = existing || { id, today: false, later: false, custom: true };
       Object.assign(task, {
         title: document.getElementById("taskTitle").value.trim(),
         category: document.getElementById("taskCategory").value,
