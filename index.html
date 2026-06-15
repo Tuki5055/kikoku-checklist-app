@@ -1214,6 +1214,8 @@
       const forcedContactIds = new Set(state.syncForceContactIds || []);
       const taskProgress = {};
       state.tasks.forEach(task => {
+        // カスタムタスクはcustomTasksで別途送信するのでここでは除外
+        if (task.quick || task.custom) return;
         const progress = {
           status: task.status,
           today: Boolean(task.today),
